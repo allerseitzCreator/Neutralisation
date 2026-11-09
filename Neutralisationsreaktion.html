@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neutralisationsreaktion</title>
+<style>
+:root{
+  --bg:#f3f5f8; --panel:#fff; --ink:#1d2433; --muted:#5b6475; --line:#dde2ea;
+  --accent:#1f6feb;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.45}
+.wrap{max-width:1400px;margin:0 auto;padding:0 16px 30px}
+header{padding:8px 2px 0;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px}
+h1{font-size:1.35rem;margin:0}
+.sub{color:var(--muted);margin:0;font-size:.88rem}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-top:10px}
+.controls{display:flex;flex-wrap:wrap;gap:12px 22px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:4px;font-size:.88rem;color:var(--muted)}
+.field b{color:var(--ink)}
+select{padding:6px 8px;border:1px solid #c8cfda;border-radius:8px;background:#fff;color:var(--ink);font:inherit;font-size:.98rem}
+input[type=range]{accent-color:var(--accent)}
+.btn{font:inherit;font-weight:600;padding:7px 12px;border-radius:9px;border:1px solid #c8cfda;background:#fff;color:var(--ink);cursor:pointer}
+.btn:hover{background:#eef3fa}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary:hover{background:#1858c4}
+.btn.on{background:#e8590c;border-color:#e8590c;color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.check{display:flex;align-items:center;gap:6px;font-size:.95rem;color:var(--ink);cursor:pointer}
+.check input{width:18px;height:18px;accent-color:var(--accent)}
+.row2{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.sep{width:1px;height:30px;background:var(--line);margin:0 4px}
+.levels{display:grid;grid-template-columns:clamp(250px,24vw,300px) 1fr 1fr;gap:10px;margin-top:8px;align-items:start}
+.levels.single{grid-template-columns:clamp(250px,24vw,300px) 1fr}
+.ctrl{overflow:auto}
+.sec{font-weight:700;font-size:.92rem;margin:2px 0 6px;color:var(--ink)}
+.ctrl .sec:not(:first-child){margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}
+.ctrl .controls{display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.ctrl .field{display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:6px;font-size:.88rem}
+.ctrl .field select{width:100%;min-width:0;padding:4px 6px;font-size:.92rem}
+.ctrl .rng{display:flex;align-items:center;gap:6px;color:var(--ink);min-width:0}
+.ctrl .rng input{flex:1;min-width:40px;width:100%}
+.ctrl .rng b{font-size:.82rem;white-space:nowrap}
+.acts{display:flex;flex-direction:column;gap:6px}
+.acts .line{display:flex;gap:6px;align-items:center}
+.acts .line .btn{flex:1;white-space:nowrap;min-width:0;padding-left:6px;padding-right:6px}
+.acts .line select{flex:0 0 86px;padding:5px 6px;font-size:.92rem}
+.acts .field.inline{grid-template-columns:auto 1fr}
+.btn.wide{width:100%}
+.ctrl .btn{font-size:.9rem;padding:6px 10px}
+details.teacher{margin-top:10px;padding-top:8px;border-top:1px solid var(--line);font-size:.9rem}
+details.teacher summary{cursor:pointer;font-weight:700;margin-bottom:4px}
+details.teacher .check{margin:4px 0;font-size:.9rem}
+details.teacher #solution{margin-top:6px;font-size:.85rem}
+@media (max-width:900px){
+  .levels,.levels.single{grid-template-columns:1fr}
+  .ctrl{grid-column:1/-1}
+  .ctrl .controls{flex-direction:row;flex-wrap:wrap}
+  .ctrl .field{grid-template-columns:auto 180px}
+  .acts{flex-direction:row;flex-wrap:wrap;align-items:center}
+  .btn.wide{width:auto}
+}
+.levels .panel{margin-top:0}
+h2{font-size:1.05rem;margin:0 0 6px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+h2 small{font-weight:400;color:var(--muted);font-size:.85rem}
+svg#lab{width:100%;height:auto;display:block;margin:0 auto}
+#particles{margin:0 auto}
+details.note summary{cursor:pointer;color:var(--accent)}
+canvas{width:100%;height:auto;display:block;border-radius:8px}
+#particles{background:#fff}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:6px;font-size:.88rem}
+.legend > span{display:flex;align-items:center;gap:6px}
+.dot{width:16px;height:16px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.2)}
+.counts{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:6px}
+.count{background:#f5f7fa;border-radius:8px;padding:3px 6px;text-align:center;font-size:.85rem;color:var(--muted)}
+.count b{display:block;font-size:1.1rem;color:var(--ink);font-variant-numeric:tabular-nums}
+.note{font-size:.85rem;color:var(--muted);margin-top:8px}
+.bottom{display:grid;grid-template-columns:1.2fr 1fr;gap:14px}
+.readings{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.reading{background:#f5f7fa;border-radius:8px;padding:8px 10px}
+.reading .lbl{font-size:.8rem;color:var(--muted)}
+.reading .val{font-size:1.3rem;font-weight:700;font-variant-numeric:tabular-nums}
+#curve{border:1px solid var(--line)}
+#info{font-size:1.03rem;min-height:5em}
+#info .obs{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);color:#2d3648}
+.warn{color:#b3261e;font-weight:600;margin-top:6px}
+.scale{margin-top:14px}
+.scalebar{position:relative;height:22px;border-radius:6px;border:1px solid #c8cfda}
+.scalebar .marker{position:absolute;top:-6px;width:4px;height:34px;background:#111;border-radius:2px;transform:translateX(-2px);transition:left .15s}
+.scalebar .range{position:absolute;top:25px;height:7px;border-left:2px solid #333;border-right:2px solid #333;border-bottom:2px solid #333}
+.ticks{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);margin-top:12px}
+.eq{font-size:1.05rem;margin:2px 0 8px;padding:8px 10px;background:#f5f7fa;border-radius:8px}
+.eq .core{color:#b3261e;font-weight:700}
+.eq .spect{color:#9aa1ad}
+.lbl-small{font-size:.8rem;color:var(--muted);margin-bottom:2px}
+#solution{font-weight:600;color:var(--accent)}
+@media (max-width:950px){.bottom{grid-template-columns:1fr}.counts{grid-template-columns:repeat(3,1fr)}.readings{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Neutralisationsreaktion <span style="font-weight:400;font-size:1rem;color:var(--muted)">erstellt von Markus Seitz</span></h1>
+  <p class="sub">Stoff- und Teilchenebene im Vergleich: Maßlösung mit der Pipette zugeben und den Verlauf mit Indikator oder pH-Meter verfolgen.</p>
+</header>
+
+<div class="levels" id="levels">
+<!-- ============ Bedienung ============ -->
+<section class="panel ctrl" id="ctrl">
+  <div class="sec">Versuch einstellen</div>
+  <div class="controls">
+    <label class="field"><span>Vorlage</span>
+      <select id="selVorlage">
+        <option value="acid">Salzsäure (sauer)</option>
+        <option value="base">Natronlauge (alkalisch)</option>
+      </select>
+    </label>
+    <label class="field"><span id="lblCV">c(Vorlage)</span>
+      <select id="selCV">
+        <option value="0.01">0,01 mol/L</option>
+        <option value="0.1" selected>0,1 mol/L</option>
+        <option value="1">1 mol/L</option>
+      </select>
+    </label>
+    <label class="field"><span>V(Vorlage)</span>
+      <span class="rng"><input type="range" id="rngVV" min="5" max="30" step="5" value="10"> <b id="outVV">10 mL</b></span>
+    </label>
+    <label class="field"><span id="lblCT">c(Maßlösung)</span>
+      <select id="selCT">
+        <option value="0.01">0,01 mol/L</option>
+        <option value="0.1" selected>0,1 mol/L</option>
+        <option value="1">1 mol/L</option>
+      </select>
+    </label>
+    <label class="field"><span>Indikator</span>
+      <select id="selInd">
+        <option value="universal">Universalindikator</option>
+        <option value="phenolphthalein">Phenolphthalein</option>
+        <option value="bromthymol">Bromthymolblau</option>
+        <option value="methylorange">Methylorange</option>
+        <option value="lackmus">Lackmus</option>
+        <option value="none">kein Indikator</option>
+      </select>
+    </label>
+    <label class="check"><input type="checkbox" id="chkMeter"> pH-Meter verwenden</label>
+  </div>
+
+  <div class="sec">Zugabe mit der Pipette</div>
+  <div class="acts">
+    <label class="field"><span>Lösung</span>
+      <select id="selSrc" title="Aus welchem Vorratsgefäß die Pipette Lösung aufnimmt">
+        <option value="T">Natronlauge</option>
+        <option value="C">Salzsäure</option>
+      </select>
+    </label>
+    <div class="line">
+      <select id="selPip" title="Volumen, das die Pipette aufnimmt" aria-label="Pipettenvolumen">
+          <option value="0.5">0,5 mL</option><option value="1" selected>1,0 mL</option><option value="1.5">1,5 mL</option>
+          <option value="2">2,0 mL</option><option value="2.5">2,5 mL</option><option value="3">3,0 mL</option>
+      </select>
+      <button class="btn primary" id="btnTake">⬆ aufnehmen</button>
+    </div>
+    <button class="btn primary wide" id="btnDrop">💧 1 Tropfen abgeben</button>
+    <button class="btn wide" id="btnRun">▶ Tropfenweise abgeben</button>
+    <label class="field inline speed"><span>Tempo</span>
+      <span class="rng"><input type="range" id="rngSpeed" min="1" max="10" value="2"> <b id="outSpeed">alle 2,0 s</b></span>
+    </label>
+    <div class="line">
+      <button class="btn" id="btnML" title="Ganzen Inhalt der Pipette abgeben">Alles abgeben</button>
+      <button class="btn" id="btnBack">Rest zurück</button>
+    </div>
+    <button class="btn wide" id="btnReset">↺ Zurücksetzen</button>
+  </div>
+
+  <details class="teacher">
+    <summary>Für Lehrkräfte</summary>
+    <label class="check"><input type="checkbox" id="chkHide"> Teilchenebene ausblenden</label>
+    <label class="check"><input type="checkbox" id="chkWater" checked> Wassermoleküle anzeigen</label>
+    <label class="check"><input type="checkbox" id="chkReal"> echte Tropfengröße (0,05 mL)</label>
+    <button class="btn" id="btnSol">Lösung anzeigen</button>
+    <div id="solution"></div>
+  </details>
+</section>
+
+<!-- ============ Stoff- und Teilchenebene ============ -->
+  <section class="panel">
+    <h2>Stoffebene <small>Was man im Labor beobachtet</small></h2>
+    <svg id="lab" viewBox="-96 0 496 500" role="img" aria-label="Versuchsaufbau mit Vorratsgefäß, graduierter Kunststoffpipette, Becherglas und Magnetrührer">
+      <defs>
+        <clipPath id="resClip2"><path d="M-79 404 L-79 477 Q-79 481 -75 481 L-3 481 Q1 481 1 477 L1 404 Z"/></clipPath>
+        <clipPath id="resClip"><path d="M17 404 L17 477 Q17 481 21 481 L93 481 Q97 481 97 477 L97 404 Z"/></clipPath>
+        <clipPath id="beakerClip"><path d="M133 300 L133 432 Q133 438 139 438 L261 438 Q267 438 267 432 L267 300 Z"/></clipPath>
+        <linearGradient id="glass" x1="0" x2="1">
+          <stop offset="0" stop-color="#ffffff" stop-opacity=".75"/>
+          <stop offset=".25" stop-color="#e9f3f9" stop-opacity=".25"/>
+          <stop offset="1" stop-color="#ffffff" stop-opacity=".45"/>
+        </linearGradient>
+        <linearGradient id="steel" x1="0" x2="1">
+          <stop offset="0" stop-color="#8f98a3"/><stop offset=".5" stop-color="#e3e7eb"/><stop offset="1" stop-color="#858d97"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Labortisch -->
+      <rect x="-90" y="484" width="418" height="12" rx="3" fill="#4f5761"/>
+
+      <!-- Zweites Vorratsgefäß: Gegenlösung zum Zurücktitrieren -->
+      <rect id="resLiquid2" x="-81" y="420" width="84" height="64" fill="#dcecf6" clip-path="url(#resClip2)"/>
+      <path d="M-84 400 L-79 404 L-79 477 Q-79 481 -75 481 L-3 481 Q1 481 1 477 L1 404 L6 400" fill="none" stroke="#7d8b99" stroke-width="2.2" stroke-linejoin="round"/>
+      <rect x="-75" y="408" width="4" height="68" rx="2" fill="#fff" opacity=".5"/>
+      <rect x="-75" y="449" width="72" height="26" rx="3" fill="#fff" stroke="#c8cfda"/>
+      <text id="resLabelB" x="-39" y="460" font-size="9.5" font-weight="700" text-anchor="middle" fill="#1d2433">Salzsäure</text>
+      <text id="resLabelB2" x="-39" y="470.5" font-size="8" text-anchor="middle" fill="#4a5562">c = 0,1 mol/L</text>
+
+      <!-- Vorratsgefäß mit Maßlösung -->
+      <rect id="resLiquid" x="15" y="420" width="84" height="64" fill="#dcecf6" clip-path="url(#resClip)"/>
+      <path d="M12 400 L17 404 L17 477 Q17 481 21 481 L93 481 Q97 481 97 477 L97 404 L102 400" fill="none" stroke="#7d8b99" stroke-width="2.2" stroke-linejoin="round"/>
+      <rect x="21" y="408" width="4" height="68" rx="2" fill="#fff" opacity=".5"/>
+      <rect x="21" y="449" width="72" height="26" rx="3" fill="#fff" stroke="#c8cfda"/>
+      <text id="resLabel" x="57" y="460" font-size="9.5" font-weight="700" text-anchor="middle" fill="#1d2433">NaOH</text>
+      <text id="resLabel2" x="57" y="470.5" font-size="8" text-anchor="middle" fill="#4a5562">1 mol/L</text>
+
+      <!-- Magnetrührer -->
+      <rect x="108" y="442" width="184" height="42" rx="6" fill="#dfe3e8" stroke="#a6adb6"/>
+      <rect x="108" y="442" width="184" height="6" rx="3" fill="#c3c9d0"/>
+      <circle cx="270" cy="466" r="8" fill="#5c6570"/><line id="knob" x1="270" y1="466" x2="270" y2="459" stroke="#fff" stroke-width="2"/>
+      <circle cx="128" cy="466" r="4" fill="#3fbf5f"/>
+
+      <!-- Becherglas: Inhalt -->
+      <g clip-path="url(#beakerClip)">
+        <rect id="liquid" x="130" y="400" width="140" height="40" fill="#dcedf6"/>
+        <rect id="surface" x="130" y="400" width="140" height="3" fill="#fff" opacity=".45"/>
+        <g id="fx"></g>
+        <ellipse id="stirbar" cx="200" cy="433" rx="18" ry="3.5" fill="#f4f4f4" stroke="#999" stroke-width="1"/>
+      </g>
+      <!-- Becherglas: Glas -->
+      <path d="M126 295 L133 300 L133 432 Q133 438 139 438 L261 438 Q267 438 267 432 L267 300 L274 295" fill="none" stroke="#7d8b99" stroke-width="2.5" stroke-linejoin="round"/>
+      <rect x="137" y="304" width="6" height="126" rx="3" fill="#fff" opacity=".5"/>
+      <g id="beakerMarks" font-size="8" fill="#6b7784"></g>
+
+      <!-- Schild: Inhalt des großen Becherglases -->
+      <g id="solSign" font-family="system-ui, sans-serif">
+        <path d="M276 330 L284 330" stroke="#9aa3ad" stroke-width="1.5"/>
+        <rect x="284" y="296" width="112" height="72" rx="6" fill="#fff" stroke="#c8cfda"/>
+        <text x="291" y="309" font-size="8" fill="#5b6475" font-weight="600">Im Becherglas:</text>
+        <text id="sol1" x="291" y="323" font-size="9.5" font-weight="700" fill="#1d2433"></text>
+        <text id="sol2" x="291" y="336" font-size="9.5" font-weight="700" fill="#1d2433"></text>
+        <text id="sol3" x="291" y="349" font-size="8.5" fill="#4a5562"></text>
+        <text id="sol4" x="291" y="361" font-size="8.5" fill="#4a5562"></text>
+      </g>
+
+      <!-- Graduierte Kunststoffpipette (Einwegpipette) mit angeformtem Saugball;
+           Koordinaten relativ zur Spitze -->
+      <g id="pipette">
+        <path id="pipTipLiquid" d="M-1 0 L-1 -30 L-3.4 -38 L3.4 -38 L1 -30 L1 0 Z" fill="#cfe6f3"/>
+        <rect id="pipLiquid" x="-3.4" y="-38" width="6.8" height="0" fill="#cfe6f3"/>
+        <!-- Pipette aus einem Stück: Spitze, Schaft und Saugball mit durchgehendem Umriss -->
+        <path id="pipBody" d="" fill="#eef2f5" fill-opacity=".6" stroke="#b3bcc6" stroke-width="1.1" stroke-linejoin="round"/>
+        <rect x="-3.2" y="-224" width="1.6" height="186" fill="#fff" opacity=".6"/>
+        <g id="pipScale" font-size="6.5" fill="#5f6873"></g>
+        <rect x="-7" y="-276" width="4" height="34" rx="2" fill="#fff" opacity=".75"/>
+      </g>
+
+      <!-- Tropfen -->
+      <g id="drops"></g>
+
+      <!-- pH-Meter -->
+      <g id="electrode">
+        <path d="M246 182 C 250 140, 300 150, 318 196" fill="none" stroke="#333" stroke-width="2.5"/>
+        <rect x="240" y="176" width="12" height="16" rx="2" fill="#333"/>
+        <rect x="242" y="190" width="8" height="234" rx="3" fill="url(#glass)" stroke="#6b7784" stroke-width="1.2"/>
+        <circle cx="246" cy="430" r="5" fill="#e6f0f6" stroke="#6b7784" stroke-width="1.2"/>
+        <rect x="298" y="196" width="96" height="80" rx="9" fill="#2f3640"/>
+        <rect x="306" y="205" width="80" height="38" rx="4" fill="#b9e4c4"/>
+        <text id="meterText" x="346" y="232" font-size="22" font-family="ui-monospace,Consolas,monospace" font-weight="700" text-anchor="middle" fill="#16351f">7,00</text>
+        <text x="346" y="262" font-size="11" text-anchor="middle" fill="#dfe6ee">pH-Meter</text>
+      </g>
+    </svg>
+    <div class="note" id="labCaption"></div>
+  </section>
+
+  <section class="panel" id="particlePanel">
+    <h2>Teilchenebene <small>Blick durch die „Lupe“ in die Lösung</small></h2>
+    <canvas id="particles"></canvas>
+    <div class="legend">
+      <span><i class="dot" style="background:#d33a2c"></i><em style="font-style:normal">H<sub>3</sub>O<sup>+</sup> Oxonium-Ion</em></span>
+      <span><i class="dot" style="background:#2a5bd7"></i><em style="font-style:normal">OH<sup>−</sup> Hydroxid-Ion</em></span>
+      <span><i class="dot" style="background:#8e44ad"></i><em style="font-style:normal">Na<sup>+</sup> Natrium-Ion</em></span>
+      <span><i class="dot" style="background:#2e9e57"></i><em style="font-style:normal">Cl<sup>−</sup> Chlorid-Ion</em></span>
+      <span><i class="dot" style="background:#8fc1de"></i><em style="font-style:normal">H<sub>2</sub>O Wassermolekül (blass: Lösungsmittel)</em></span>
+    </div>
+    <div class="counts" id="counts"></div>
+    <details class="note"><summary>Hinweise zum Modell</summary><div id="modelNote"></div></details>
+  </section>
+</div>
+
+<!-- ============ Messwerte, Infos, Gleichungen ============ -->
+<div class="bottom">
+  <section class="panel">
+    <h2>Messwerte und Titrationskurve</h2>
+    <div class="readings">
+      <div class="reading"><div class="lbl">zugegeben</div><div class="val" id="rAdded">0,00 mL</div></div>
+      <div class="reading"><div class="lbl">in der Pipette</div><div class="val" id="rPip">0,00 mL</div></div>
+      <div class="reading"><div class="lbl">Gesamtvolumen</div><div class="val" id="rTotal">10,00 mL</div></div>
+      <div class="reading"><div class="lbl">pH-Wert</div><div class="val" id="rPH">–</div></div>
+    </div>
+    <canvas id="curve"></canvas>
+  </section>
+
+  <section class="panel">
+    <h2>Was passiert?</h2>
+    <div id="info"></div>
+    <div class="scale" id="scaleBox">
+      <div class="lbl-small" id="indDesc"></div>
+      <div class="scalebar" id="scalebar"><div class="range" id="scaleRange"></div><div class="marker" id="scaleMarker"></div></div>
+      <div class="ticks"><span>0</span><span>2</span><span>4</span><span>6</span><span>8</span><span>10</span><span>12</span><span>14</span></div>
+    </div>
+    <h2 style="margin-top:16px">Reaktionsgleichungen</h2>
+    <div class="lbl-small">Stoffgleichung</div><div class="eq" id="eqStoff"></div>
+    <div class="lbl-small">Ionenschreibweise (grau: Zuschauer-Ionen)</div><div class="eq" id="eqIon"></div>
+    <div class="lbl-small">Kern der Neutralisation</div><div class="eq" id="eqCore"></div>
+  </section>
+</div>
+</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   KONFIGURATION – hier können Lehrkräfte Werte anpassen
+   ===================================================================== */
+const DROP_REAL   = 0.05;   // Volumen eines echten Tropfens in mL
+const PAIRS_PER_DROP = 2;  // Modell: Ionenpaare pro Tropfen
+const RES_ML      = 150;    // Fassungsvermögen des Vorratsgefäßes in mL
+const RES_START   = 120;    // Füllung des Vorratsgefäßes zu Beginn in mL
+const BEAKER_ML   = 60;     // Fassungsvermögen des Becherglases in mL
+/* Anzahl der Vorlage-Ionen (H3O+ bzw. OH-) in der Lupe – abhängig von der Konzentration der
+   Vorlage, damit man Konzentrationsunterschiede an der Teilchenzahl erkennt.
+   (Vereinfacht: In Wirklichkeit unterscheiden sich die Stufen jeweils um den Faktor 10.) */
+const N0_BY_CONC  = {0.01: 6, 0.1: 16, 1: 32};
+const EXTRA_PAIRS = 12;     // so viele überschüssige Ionenpaare werden nach dem Äquivalenzpunkt noch ergänzt
+const BG_WATER    = 30;     // angedeutete Wassermoleküle des Lösungsmittels zu Beginn
+const BG_WATER_MAX = 40;    // mehr Lösungsmittel-Moleküle verlassen den Lupen-Ausschnitt wieder
+const WATER_PER_DROP = 4;  // Wassermoleküle (Lösungsmittel), die mit jedem Tropfen eintreten
+const KW          = 1e-14;  // Ionenprodukt des Wassers (25 °C)
+const AVOGADRO    = 6.022e23;
+
+/* Indikatoren: Farbstützstellen [pH, r, g, b, Deckkraft]
+   names: [obere pH-Grenze, Farbname] für die Beobachtungstexte */
+const INDICATORS = {
+  universal: {
+    name: 'Universalindikator', range: [1, 14],
+    desc: 'Universalindikator: rot (sauer) – grün (neutral) – blau/violett (alkalisch), pH 1–14',
+    stops: [[0,192,22,28,.85],[2,232,51,31,.85],[3,242,107,29,.85],[4,247,162,27,.85],[5,245,208,30,.85],
+            [6,205,212,40,.85],[7,63,166,60,.85],[8,31,154,131,.85],[9,31,111,181,.85],[10,44,78,166,.85],
+            [11,69,55,154,.85],[12,90,42,142,.85],[14,75,29,115,.85]],
+    names: [[3,'rot'],[4.5,'orange'],[6.5,'gelb'],[7.5,'grün'],[8.7,'blaugrün'],[10.5,'blau'],[99,'violett']]
+  },
+  phenolphthalein: {
+    name: 'Phenolphthalein', range: [8.2, 10],
+    desc: 'Phenolphthalein: farblos → pink, Umschlagbereich pH 8,2–10,0',
+    stops: [[0,240,80,170,0],[8.2,240,80,170,0],[9,230,40,150,.5],[10,214,20,130,.85],[14,214,20,130,.85]],
+    names: [[8.2,'farblos'],[9.2,'zartrosa'],[99,'pink']]
+  },
+  bromthymol: {
+    name: 'Bromthymolblau', range: [6.0, 7.6],
+    desc: 'Bromthymolblau: gelb → grün → blau, Umschlagbereich pH 6,0–7,6',
+    stops: [[0,230,204,40,.85],[6,230,204,40,.85],[6.8,90,160,62,.85],[7.6,36,87,176,.85],[14,36,87,176,.85]],
+    names: [[6.2,'gelb'],[7.4,'grün'],[99,'blau']]
+  },
+  methylorange: {
+    name: 'Methylorange', range: [3.1, 4.4],
+    desc: 'Methylorange: rot → gelb-orange, Umschlagbereich pH 3,1–4,4',
+    stops: [[0,215,48,31,.85],[3.1,215,48,31,.85],[3.8,238,110,30,.85],[4.4,245,175,40,.85],[14,245,175,40,.85]],
+    names: [[3.3,'rot'],[4.2,'orange'],[99,'gelb-orange']]
+  },
+  lackmus: {
+    name: 'Lackmus', range: [5.0, 8.0],
+    desc: 'Lackmus: rot → violett → blau, Umschlagbereich pH 5,0–8,0',
+    stops: [[0,192,57,43,.85],[5,192,57,43,.85],[6.5,125,60,143,.85],[8,60,79,160,.85],[14,60,79,160,.85]],
+    names: [[5.3,'rot'],[7.7,'violett'],[99,'blau']]
+  },
+  none: {
+    name: 'kein Indikator', range: null, desc: 'Ohne Indikator: Die Lösung bleibt farblos.',
+    stops: [[0,255,255,255,0],[14,255,255,255,0]], names: [[99,'farblos']]
+  }
+};
+const WATER_RGB = [220, 237, 246]; // Grundfarbe der farblosen Lösung
+
+/* Teilchenarten im Teilchenbild */
+const TYPES = {
+  H3O: {r:15, col:'#d33a2c', light:'#f39a90', label:'H₃O⁺', fs:10, txt:'#fff'},
+  OH:  {r:15, col:'#2a5bd7', light:'#8fb0f5', label:'OH⁻',  fs:11, txt:'#fff'},
+  Na:  {r:11, col:'#8e44ad', light:'#cf9ee6', label:'Na⁺',  fs:9,  txt:'#fff'},
+  Cl:  {r:14, col:'#2e9e57', light:'#93dbab', label:'Cl⁻',  fs:10, txt:'#fff'},
+  W:   {r:10, col:'#7fb6d6', light:'#d4eaf6', label:'H₂O',  fs:8,  txt:'#173a52'},
+  bgW: {r:9,  col:'rgba(160,200,226,.45)'}
+};
+
+/* HTML-Formeln */
+const F = {
+  H3O:'H<sub>3</sub>O<sup>+</sup>', OH:'OH<sup>−</sup>', Na:'Na<sup>+</sup>', Cl:'Cl<sup>−</sup>', H2O:'H<sub>2</sub>O'
+};
+
+/* =====================================================================
+   ZUSTAND
+   ===================================================================== */
+const S = {
+  vorlage: 'acid',   // 'acid' = Salzsäure vorgelegt, 'base' = Natronlauge vorgelegt
+  cV: 0.1, vV: 10,   // Konzentration (mol/L) und Volumen (mL) der Vorlage
+  cT: 0.1,           // Konzentration der Maßlösung (mol/L)
+  indicator: 'universal',
+  meter: false,
+  vTit: 0,           // zugegebenes Volumen Maßlösung in mL
+  vCnt: 0,           // zugegebenes Volumen Gegenlösung (zum Zurücktitrieren) in mL
+  pendT: 0, pendC: 0,// Volumen der Tropfen in der Luft (je Lösung)
+  src: 'T',          // Lösung für die nächste Aufnahme: 'T' = Maßlösung, 'C' = Gegenlösung
+  pipSel: 1,         // gewähltes Pipettenvolumen in mL
+  pipAt: 'res',      // 'res' = über dem Vorratsgefäß, 'beaker' = über dem Becherglas, 'moving'
+  resVolT: RES_START, resVolC: RES_START,
+  realDrops: false,  // false: Modelltropfen (jeder Tropfen bringt PAIRS_PER_DROP Ionenpaare)
+  running: false, speed: 0.5, dropAcc: 0,
+  showWater: true, showSolution: false,
+  data: [], msg: ''
+};
+
+/* =====================================================================
+   HILFSFUNKTIONEN
+   ===================================================================== */
+const _el = {};
+const $ = id => _el[id] || (_el[id] = document.getElementById(id));
+/* Schreibt Attribute/Inhalte nur, wenn sich der Wert geändert hat (spart Rechenzeit) */
+function setA(id, attr, val){ const e = $(id), c = e._c || (e._c = {}); val = String(val);
+  if (c[attr] !== val){ c[attr] = val; e.setAttribute(attr, val); } }
+function setH(id, html){ const e = $(id); if (e._h !== html){ e._h = html; e.innerHTML = html; } }
+function setT(id, txt){ const e = $(id); if (e._t !== txt){ e._t = txt; e.textContent = txt; } }
+const fmt = (x, d = 2) => x.toFixed(d).replace('.', ',');
+const fmtV = v => fmt(v, Math.abs(v*100 - Math.round(v*100)) > 1e-6 ? 3 : 2);  // Volumen mit 2 bzw. 3 Nachkommastellen
+/* Tropfenvolumen: Im Modell ist ein Tropfen so groß, dass er genau PAIRS_PER_DROP Ionenpaare
+   mitbringt – so stimmen Stoff- und Teilchenebene überein. Wahlweise echte Tropfen (0,05 mL). */
+const n0 = () => N0_BY_CONC[S.cV] || 16;
+const dropML = () => S.realDrops ? DROP_REAL : (S.cV * S.vV / S.cT) / (n0() / PAIRS_PER_DROP);
+const vT = () => S.vTit + S.vCnt;                           // insgesamt zugegebenes Volumen in mL
+const names = () => S.vorlage === 'acid'
+  ? {v:'Salzsäure', vF:'HCl', t:'Natronlauge', tF:'NaOH', vIon:'H3O', vCo:'Cl', tIon:'OH', tCo:'Na'}
+  : {v:'Natronlauge', vF:'NaOH', t:'Salzsäure', tF:'HCl', vIon:'OH', vCo:'Na', tIon:'H3O', tCo:'Cl'};
+const Veq = () => S.cV * S.vV / S.cT;                       // Äquivalenzvolumen in mL
+
+function supNum(n){ const m = {'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+  return String(n).split('').map(c => m[c] || c).join(''); }
+function sci(x){ const e = Math.floor(Math.log10(x)); const m = x / 10 ** e; return fmt(m, 1) + ' · 10' + supNum(e); }
+
+function setupCanvas(el, w, h){
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  el.width = w * dpr; el.height = h * dpr;
+  const c = el.getContext('2d'); c.scale(dpr, dpr); return c;
+}
+
+/* =====================================================================
+   CHEMIE: pH-Berechnung für starke Säure / starke Base
+   ===================================================================== */
+function chem(){ return chemAt(S.vTit, S.vCnt); }
+/* Zustand nach Zugabe von vt mL Maßlösung und vc mL Gegenlösung (gleiche Lösung wie die Vorlage,
+   Konzentration wie die Maßlösung) */
+function chemAt(vt, vc){
+  const nV = S.cV * S.vV / 1000;            // mol Vorlage-Ionen (H3O+ bzw. OH-)
+  const nC = S.cT * vc / 1000;              // mol Vorlage-Ionen aus der Gegenlösung
+  const nT = S.cT * vt / 1000;              // mol zugegebene Maßlösungs-Ionen
+  const V  = (S.vV + vt + vc) / 1000;       // Gesamtvolumen in L
+  const ex = nV + nC - nT;                  // Überschuss der Vorlage-Ionen (negativ: Überschuss Maßlösung)
+  const d  = ex / V;
+  // Konzentration des Vorlage-Ions unter Berücksichtigung der Autoprotolyse:
+  // x = d/2 + sqrt(d²/4 + Kw)  (numerisch stabile Form für d < 0)
+  const root = Math.sqrt(d * d / 4 + KW);
+  const x = d >= 0 ? d / 2 + root : KW / (-d / 2 + root);
+  const pH = S.vorlage === 'acid' ? -Math.log10(x) : 14 + Math.log10(x);
+  const tol = (nV + nC) * 1e-9;
+  let phase = 'before';
+  if (vt === 0 && vc === 0) phase = 'start';
+  else if (Math.abs(ex) < tol) phase = 'eq';
+  else if (ex < 0) phase = 'after';
+  return {pH, nV, nT, nC, phase, ratio: nT / nV, ratioC: nC / nV};
+}
+let C = chem();
+
+/* Indikatorfarbe bei gegebenem pH */
+function indRGBA(key, pH){
+  const st = INDICATORS[key].stops;
+  if (pH <= st[0][0]) return st[0].slice(1);
+  for (let i = 1; i < st.length; i++){
+    if (pH <= st[i][0]){
+      const a = st[i-1], b = st[i], t = (pH - a[0]) / (b[0] - a[0]);
+      return [1,2,3,4].map(k => a[k] + (b[k] - a[k]) * t);
+    }
+  }
+  return st[st.length-1].slice(1);
+}
+function liquidRGB(key, pH){
+  const [r,g,b,a] = indRGBA(key, pH);
+  const m = (w, c) => Math.round(w + (c - w) * a);
+  return `rgb(${m(WATER_RGB[0],r)},${m(WATER_RGB[1],g)},${m(WATER_RGB[2],b)})`;
+}
+function colorName(key, pH){
+  for (const [lim, n] of INDICATORS[key].names) if (pH < lim) return n;
+  return '';
+}
+
+/* =====================================================================
+   TEILCHENEBENE
+   ===================================================================== */
+/* Zeichenfläche: oben die vergrößerte Pipette, darunter die Lupe (Ausschnitt der Lösung im Becherglas) */
+const PW = 560, LY = 150, PH = 410, CH_P = LY + PH;  // Breite, Lupe-Oberkante, Lupe-Höhe, Gesamthöhe
+const pc = setupCanvas($('particles'), PW, CH_P);
+const TUBE = {cx: PW/2, half: 46, top: 4, bottom: 112, tipY: 138, tipHalf: 9};
+const TUBE_PAIRS = {0.01: 2, 0.1: 4, 1: 8};  // Ionenpaare in der vollen Pipette (3 mL) je nach Konzentration
+const TUBE_WATER = 8;
+const TUBE_SCALE = 0.7;                      // Teilchen in der Pipette etwas kleiner zeichnen
+let parts = [], flashes = [], spawnedT = 0, spawnedC = 0, tparts = [];
+
+function mk(type, x, y){
+  return {type, x, y, vx:(Math.random()-.5)*1.5, vy:(Math.random()-.5)*1.5,
+          r: TYPES[type].r, partner:null, dead:false, fresh:0, age:1000, alpha:1};
+}
+function rndPos(r){ return [r + Math.random()*(PW-2*r), LY + r + Math.random()*(PH-2*r)]; }
+
+function initParticles(){
+  parts = []; flashes = []; spawnedT = 0; spawnedC = 0; tparts = [];
+  const n = names();
+  for (let i = 0; i < BG_WATER; i++) parts.push(mk('bgW', ...rndPos(10)));
+  for (let i = 0; i < n0(); i++){
+    parts.push(mk(n.vIon, ...rndPos(16)));
+    parts.push(mk(n.vCo,  ...rndPos(16)));
+  }
+}
+/* Erzeugt die Teilchen eines Tropfens. Sie treten an der Pipettenspitze aus und bewegen sich
+   synchron zum Tropfen der Stoffebene in die Lupe. Cp = Zustand nach diesem Tropfen. */
+function spawnDropParticles(carrier, kind, Cp, src){
+  const n = names();
+  // Rundung so, dass das Bild zur Phase passt (vor dem Äquivalenzpunkt bleibt mind. ein
+  // Vorlage-Ion übrig, danach ist mind. ein überschüssiges Maßlösungs-Ion zu sehen)
+  let newPairs, ions;
+  if (src === 'C'){                       // Gegenlösung: bringt Vorlage-Ionen (z. B. H3O+ und Cl-)
+    const B = spawnedT;
+    let t = Math.round(n0() * Cp.ratioC);
+    if (Cp.phase === 'before') t = Math.max(t, B + 1 - n0());
+    if (Cp.phase === 'eq')     t = B - n0();
+    if (Cp.phase === 'after')  t = Math.min(t, B - 1 - n0());
+    t = Math.min(t, B + EXTRA_PAIRS - n0());
+    newPairs = Math.max(0, t - spawnedC); spawnedC += newPairs;
+    ions = [n.vIon, n.vCo];
+  } else {                                // Maßlösung
+    const A = n0() + spawnedC;
+    let t = Math.round(n0() * Cp.ratio);
+    if (Cp.phase === 'before') t = Math.min(t, A - 1);
+    if (Cp.phase === 'eq')     t = A;
+    if (Cp.phase === 'after')  t = Math.max(t, A + 1);
+    t = Math.min(A + EXTRA_PAIRS, t);
+    newPairs = Math.max(0, t - spawnedT); spawnedT += newPairs;
+    ions = [n.tIon, n.tCo];
+  }
+  const big = kind === 'stream';
+  let order = 0;
+  // Beim ganzen Inhalt fließen die Teilchen nacheinander als Strom aus der Pipettenspitze
+  const flow = p => { p.carrier = null; p.wait = (order++) * 12 + Math.random() * 30;
+    p.x = TUBE.cx + (Math.random()-.5) * 2 * TUBE.tipHalf; p.y = TUBE.tipY; };
+  for (let i = 0; i < newPairs; i++){
+    ions.forEach((t, k) => {
+      const p = mk(t, carrier.x, carrier.y); p.age = 0; p.carrier = carrier;
+      p.ox = big ? (Math.random()-.5)*160 : (k ? 15 : -15) + (i - (newPairs-1)/2) * 40;
+      p.oy = big ? -Math.random()*60 : -i * 4;
+      if (big) flow(p);
+      parts.push(p);
+    });
+  }
+  // Mit jedem Tropfen kommt auch Lösungsmittel (Wasser) hinzu
+  const nW = big ? 3 * WATER_PER_DROP : WATER_PER_DROP;
+  for (let i = 0; i < nW; i++){
+    const w = mk('bgW', carrier.x, carrier.y); w.age = 0; w.carrier = carrier;
+    w.ox = (Math.random()-.5) * (big ? 180 : 80);
+    w.oy = -Math.random() * (big ? 60 : 24);
+    if (big) flow(w);
+    parts.push(w);
+  }
+  // Damit die Lupe nicht überläuft, verlassen die ältesten Lösungsmittel-Moleküle den Ausschnitt
+  const solvent = parts.filter(p => p.type === 'bgW' && !p.leaving && !p.carrier);
+  let excess = solvent.length + nW - BG_WATER_MAX;
+  for (const p of solvent){ if (excess-- <= 0) break; p.leaving = true; }
+}
+function newCarrier(){ return {x: TUBE.cx, y: TUBE.tipY, prog: 0, t: 0, released: false}; }
+function setCarrierProgress(c, prog){
+  c.prog = Number.isFinite(prog) ? Math.max(0, Math.min(1, prog)) : 1;
+  c.y = TUBE.tipY + c.prog * (LY + 30 - TUBE.tipY);
+}
+
+/* ---- Teilchen in der vergrößerten Pipette ---- */
+function tubeLevel(){ return pip.vol / PIP_MAX * (TUBE.bottom - TUBE.top - 4); }
+function syncTube(){
+  const n = names(), frac = pip.vol / PIP_MAX, has = pip.vol > 1e-6;
+  const pairs = TUBE_PAIRS[S.cT] || 4;
+  const [ion, co] = pip.src === 'C' ? [n.vIon, n.vCo] : [n.tIon, n.tCo];
+  const want = {};
+  want[ion] = want[co] = has ? Math.max(1, Math.round(pairs * frac)) : 0;
+  want.bgW = has ? Math.max(1, Math.round(TUBE_WATER * frac)) : 0;
+  const top = TUBE.bottom - tubeLevel();
+  for (const t of Object.keys(want)){
+    const list = tparts.filter(p => p.type === t);
+    for (let i = list.length; i < want[t]; i++){
+      const p = mk(t, TUBE.cx + (Math.random()-.5) * 70, top + Math.random() * (TUBE.bottom - top));
+      p.r = TYPES[t].r * TUBE_SCALE; p.s = TUBE_SCALE; tparts.push(p);
+    }
+    if (list.length > want[t]){     // die untersten Teilchen verlassen die Pipette (als Tropfen)
+      list.sort((a, b) => b.y - a.y);
+      for (let i = 0; i < list.length - want[t]; i++) list[i].dead = true;
+    }
+  }
+  tparts = tparts.filter(p => !p.dead && (p.type === ion || p.type === co || p.type === 'bgW'));
+}
+function stepTube(dt){
+  syncTube();
+  const f = dt / 16.7, h = tubeLevel(), top = TUBE.bottom - h;
+  // leichte Abstoßung, damit sich die Teilchen in der Pipette nicht verdecken
+  for (let i = 0; i < tparts.length; i++) for (let j = i + 1; j < tparts.length; j++){
+    const a = tparts[i], q = tparts[j], dx = q.x - a.x, dy = q.y - a.y, d = Math.hypot(dx, dy) || 0.01, m = a.r + q.r;
+    if (d < m){ const k = (m - d) / d * 0.08 * f; a.vx -= dx*k; a.vy -= dy*k; q.vx += dx*k; q.vy += dy*k; }
+  }
+  for (const p of tparts){
+    p.vx += (Math.random()-.5)*0.4*f; p.vy += (Math.random()-.5)*0.4*f;
+    p.vx *= 0.95; p.vy *= 0.95;
+    p.x += p.vx*f; p.y += p.vy*f;
+    const x0 = TUBE.cx - TUBE.half + 3 + p.r, x1 = TUBE.cx + TUBE.half - 3 - p.r;
+    if (p.x < x0){ p.x = x0; p.vx = Math.abs(p.vx); } if (p.x > x1){ p.x = x1; p.vx = -Math.abs(p.vx); }
+    const y0 = Math.min(top + p.r, TUBE.bottom - p.r), y1 = TUBE.bottom - p.r + 4;
+    if (p.y < y0){ p.y = y0; p.vy = Math.abs(p.vy); } if (p.y > y1){ p.y = y1; p.vy = -Math.abs(p.vy); }
+  }
+}
+function drawTube(){
+  const c = pc, T = TUBE, h = tubeLevel(), n = names();
+  const faded = S.pipAt !== 'beaker';
+  c.save(); c.globalAlpha = faded ? 0.45 : 1;
+  // Flüssigkeit
+  if (pip.vol > 1e-6){
+    c.fillStyle = 'rgba(190,222,240,.9)';
+    c.fillRect(T.cx - T.half, T.bottom - h, 2*T.half, h);
+    c.beginPath(); c.moveTo(T.cx - T.half, T.bottom); c.lineTo(T.cx + T.half, T.bottom);
+    c.lineTo(T.cx + T.tipHalf, T.tipY); c.lineTo(T.cx - T.tipHalf, T.tipY); c.closePath(); c.fill();
+  }
+  for (const t of ['bgW', n.vCo, n.tCo, n.vIon, n.tIon]) for (const p of tparts) if (p.type === t && (t !== 'bgW' || S.showWater)) drawParticle(p);
+  // Glas
+  c.strokeStyle = '#aab4be'; c.lineWidth = 2.5; c.lineJoin = 'round';
+  c.beginPath();
+  c.moveTo(T.cx - T.half, T.top); c.lineTo(T.cx - T.half, T.bottom); c.lineTo(T.cx - T.tipHalf, T.tipY);
+  c.moveTo(T.cx + T.tipHalf, T.tipY); c.lineTo(T.cx + T.half, T.bottom); c.lineTo(T.cx + T.half, T.top);
+  c.stroke();
+  c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(T.cx - T.half + 4, T.top, 6, T.bottom - T.top);
+  c.restore();
+  // Beschriftung
+  c.fillStyle = '#1d2433'; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+  c.font = '600 13px system-ui, sans-serif';
+  c.fillText('Kunststoffpipette (vergrößert)', T.cx + T.half + 14, 34);
+  c.font = '12px system-ui, sans-serif'; c.fillStyle = '#4a5562';
+  c.fillText(`${fmt(Math.max(0, pip.vol))} mL ${pip.src === 'C' ? n.v : n.t}`, T.cx + T.half + 14, 52);
+  c.fillText(`c = ${fmt(S.cT, S.cT < 0.1 ? 2 : (S.cT < 1 ? 1 : 0))} mol/L`, T.cx + T.half + 14, 68);
+  if (faded){
+    c.fillStyle = '#7a8392';
+    c.fillText(S.pipAt === 'res' ? 'befindet sich über einem Vorratsgefäß' : 'wird bewegt …', T.cx + T.half + 14, 86);
+  }
+}
+function pairUp(){
+  const ok = p => !p.dead && !p.partner && !p.carrier && !(p.wait > 0) && p.age > 350 && p.y > LY + p.r;
+  const Hs = parts.filter(p => p.type === 'H3O' && ok(p));
+  const Os = parts.filter(p => p.type === 'OH'  && ok(p));
+  const [few, many] = Hs.length <= Os.length ? [Hs, Os] : [Os, Hs];
+  for (const a of few){
+    let best = null, bd = Infinity;
+    for (const b of many){ if (b.partner) continue;
+      const d = (a.x-b.x)**2 + (a.y-b.y)**2; if (d < bd){ bd = d; best = b; } }
+    if (best){ a.partner = best; best.partner = a; }
+  }
+}
+function react(p, q){
+  p.dead = q.dead = true;
+  const mx = (p.x+q.x)/2, my = (p.y+q.y)/2;
+  flashes.push({x:mx, y:my, t:0});
+  for (const s of [-1, 1]){
+    const w = mk('W', mx + s*9, my);
+    w.vx = s*1.6; w.vy = (Math.random()-.5)*1.2; w.fresh = 1;
+    parts.push(w);
+  }
+}
+function stepParticles(dt){
+  const f = dt / 16.7;
+  pairUp();
+  for (const p of parts){
+    if (p.dead) continue;
+    if (p.wait > 0){                         // wartet noch in der Pipettenspitze
+      p.wait -= dt;
+      if (p.wait <= 0){ p.vx = (Math.random()-.5) * 2.5; p.vy = 3.2; p.age = 0; }
+      continue;
+    }
+    if (p.carrier){
+      const d = p.carrier;
+      if (!d.released){
+        const spread = 0.25 + 0.75 * d.prog;      // Teilchen fächern sich beim Austreten auf
+        p.x = d.x + p.ox * spread; p.y = d.y + p.oy * spread; continue;
+      }
+      // Tropfen ist in der Lösung angekommen: Teilchen werden freigesetzt
+      p.carrier = null; p.vx = p.ox * 0.05; p.vy = 1.4 + Math.random(); p.age = 0;
+    }
+    p.age += dt;
+    if (p.partner && !p.partner.dead){
+      const q = p.partner, dx = q.x-p.x, dy = q.y-p.y, d = Math.hypot(dx, dy) || 1;
+      p.vx += dx/d*0.22*f; p.vy += dy/d*0.22*f;
+      if (d < p.r + q.r - 8 && p.type === 'H3O') react(p, q);
+    } else {
+      p.vx += (Math.random()-.5)*0.45*f; p.vy += (Math.random()-.5)*0.45*f;
+    }
+    const damp = Math.pow(0.975, f); p.vx *= damp; p.vy *= damp;
+    const cap = p.partner ? 3.2 : (p.age < 700 ? 3.5 : 1.6);
+    const sp = Math.hypot(p.vx, p.vy); if (sp > cap){ p.vx *= cap/sp; p.vy *= cap/sp; }
+    p.x += p.vx*f; p.y += p.vy*f;
+    if (p.x < p.r){ p.x = p.r; p.vx = Math.abs(p.vx); }
+    if (p.x > PW-p.r){ p.x = PW-p.r; p.vx = -Math.abs(p.vx); }
+    if (p.y > LY+PH-p.r){ p.y = LY+PH-p.r; p.vy = -Math.abs(p.vy); }
+    if (p.y < LY+p.r && p.age > 700){ p.y = LY+p.r; p.vy = Math.abs(p.vy); }
+    if (p.fresh > 0) p.fresh = Math.max(0, p.fresh - dt/1800);
+    if (p.leaving){ p.alpha -= dt/700; if (p.alpha <= 0) p.dead = true; }
+  }
+  parts = parts.filter(p => !p.dead);
+  for (const fl of flashes) fl.t += dt;
+  flashes = flashes.filter(fl => fl.t < 650);
+}
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+const _spr = {};
+/* Jede Teilchenart wird einmal vorgezeichnet und danach nur noch kopiert */
+function sprite(type, s){
+  const key = type + '|' + s;
+  if (_spr[key]) return _spr[key];
+  const T = TYPES[type], r = T.r * s, size = Math.ceil(2*r + 4);
+  const cv = document.createElement('canvas'); cv.width = cv.height = size * DPR;
+  const c = cv.getContext('2d'); c.scale(DPR, DPR);
+  const x = size/2, y = size/2;
+  if (type === 'bgW'){
+    c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fillStyle = T.col; c.fill();
+    c.lineWidth = 1; c.strokeStyle = 'rgba(80,140,180,.35)'; c.stroke();
+    c.fillStyle = 'rgba(23,58,82,.5)'; c.font = `600 ${7*s}px system-ui, sans-serif`;
+  } else {
+    const g = c.createRadialGradient(x-r*.35, y-r*.35, 1, x, y, r);
+    g.addColorStop(0, T.light); g.addColorStop(1, T.col);
+    c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fillStyle = g; c.fill();
+    c.lineWidth = 1; c.strokeStyle = 'rgba(0,0,0,.25)'; c.stroke();
+    c.fillStyle = T.txt; c.font = `700 ${T.fs*s}px system-ui, sans-serif`;
+  }
+  c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(type === 'bgW' ? 'H₂O' : T.label, x, y+0.5);
+  return (_spr[key] = {cv, size});
+}
+function drawParticle(p){
+  const c = pc, sp = sprite(p.type, p.s || 1);
+  if (p.fresh > 0){
+    c.beginPath(); c.arc(p.x,p.y,p.r+5,0,Math.PI*2);
+    c.fillStyle = `rgba(255,200,40,${0.55*p.fresh})`; c.fill();
+  }
+  if (p.alpha < 1) c.globalAlpha = Math.max(0, p.alpha);
+  c.drawImage(sp.cv, p.x - sp.size/2, p.y - sp.size/2, sp.size, sp.size);
+  if (p.alpha < 1) c.globalAlpha = 1;
+}
+function drawParticles(){
+  const c = pc;
+  c.clearRect(0,0,PW,CH_P);
+  // Lupe
+  c.fillStyle = '#eaf4fa'; c.strokeStyle = '#b9d3e4'; c.lineWidth = 2;
+  c.beginPath(); if (c.roundRect) c.roundRect(1, LY+1, PW-2, PH-2, 8); else c.rect(1, LY+1, PW-2, PH-2); c.fill(); c.stroke();
+  c.fillStyle = '#5b6475'; c.font = '600 12px system-ui, sans-serif'; c.textAlign = 'left'; c.textBaseline = 'middle';
+  c.fillText('Lupe: Lösung im Becherglas', 12, LY + 16);
+  drawTube();
+  const order = ['bgW','W','Na','Cl','H3O','OH'];
+  for (const t of order){
+    if ((t === 'bgW' || t === 'W') && !S.showWater) continue;
+    for (const p of parts) if (p.type === t && !(p.wait > 0)) drawParticle(p);
+  }
+  // Beschriftung: Konzentration der Vorlage
+  const lbl = `${names().v}: c = ${fmt(S.cV, S.cV < 0.1 ? 2 : (S.cV < 1 ? 1 : 0))} mol/L`;
+  c.font = '600 13px system-ui, sans-serif'; c.textAlign = 'left'; c.textBaseline = 'middle';
+  const tw = c.measureText(lbl).width;
+  c.fillStyle = 'rgba(255,255,255,.85)'; c.fillRect(PW - tw - 22, LY + PH - 30, tw + 14, 22);
+  c.fillStyle = '#1d2433'; c.fillText(lbl, PW - tw - 15, LY + PH - 19);
+  for (const fl of flashes){
+    const k = fl.t / 650;
+    c.beginPath(); c.arc(fl.x, fl.y, 8 + 30*k, 0, Math.PI*2);
+    c.fillStyle = `rgba(255,214,60,${0.7*(1-k)})`; c.fill();
+  }
+}
+let countTick = 0;
+function updateCounts(){
+  const n = {H3O:0, OH:0, Na:0, Cl:0, W:0};
+  for (const p of parts) if (n[p.type] !== undefined && !p.carrier && !(p.wait > 0)) n[p.type]++;
+  setH('counts',
+    `<div class="count"><b>${n.H3O}</b>${F.H3O}</div>` +
+    `<div class="count"><b>${n.OH}</b>${F.OH}</div>` +
+    `<div class="count"><b>${n.Na}</b>${F.Na}</div>` +
+    `<div class="count"><b>${n.Cl}</b>${F.Cl}</div>` +
+    `<div class="count"><b>${n.W}</b>${F.H2O} gebildet</div>`);
+}
+
+/* =====================================================================
+   STOFFEBENE (SVG-Laborszene)
+   ===================================================================== */
+const BK_BOTTOM = 438, BK_H = 138;  // großes Becherglas
+const RES_BOTTOM = 481, RES_H = 77; // Vorratsgefäß
+const PIP_PX = 62;                  // Pipette: Pixel pro mL
+const PIP_MAX = 3;                  // Pipette: maximales Volumen in mL
+const LIFT_Y = 287;                 // Höhe der Pipettenspitze beim Umsetzen (über den Becherrändern)
+const POS = { resUp:{x:57, y:330}, resDown:{x:57, y:474}, beaker:{x:200, y:372} };
+const RES_X = {T: 57, C: -39};      // x-Position der Vorratsgefäße (Maßlösung / Gegenlösung)
+const pip = {x: POS.resUp.x, y: POS.resUp.y, vol: 0, squeeze: 0, src: 'T'};
+let queue = [];                     // Animationsschritte der Pipette
+let drops = [], ripples = [], streamT = 0, stirAngle = 0;
+
+(function buildScales(){
+  let s = '';
+  for (let i = 1; i <= 6; i++){                       // Graduierung in 0,5-mL-Schritten
+    const v = i / 2, y = -(38 + v * PIP_PX), full = i % 2 === 0;
+    s += `<line x1="${4.5 - (full ? 7 : 5)}" x2="4.5" y1="${y}" y2="${y}" stroke="#5f6873" stroke-width=".8"/>`;
+    s += `<text x="7.5" y="${y + 2.5}">${fmt(v, 1)}</text>`;
+  }
+  $('pipScale').innerHTML = s;
+  let b = '';
+  for (const ml of [10, 20, 30, 40, 50]){
+    const y = BK_BOTTOM - ml / BEAKER_ML * BK_H;
+    b += `<line x1="133" x2="150" y1="${y}" y2="${y}" stroke="#7d8b99" stroke-width="1"/>` +
+         `<text x="153" y="${y+3}">${ml} mL</text>`;
+  }
+  $('beakerMarks').innerHTML = b;
+})();
+
+/* Umriss der Kunststoffpipette; B = halbe Breite des Saugballs */
+function pipOutline(B){
+  const b = B.toFixed(2);
+  return `M-1.7 0 L-1.7 -30 L-4.5 -38 L-4.5 -226 C-4.5 -231 -${b} -232 -${b} -240 ` +
+         `L-${b} -273 A${b} ${b} 0 0 1 ${b} -273 L${b} -240 C${b} -232 4.5 -231 4.5 -226 ` +
+         `L4.5 -38 L1.7 -30 L1.7 0 Z`;
+}
+function surfaceY(){
+  const vTot = S.vV + vT();
+  return BK_BOTTOM - Math.min(vTot / BEAKER_ML, 0.97) * BK_H;
+}
+function titrantPH(){ return S.vorlage === 'acid' ? 14 + Math.log10(S.cT) : -Math.log10(S.cT); }
+
+function renderLab(dt){
+  const sy = surfaceY();
+  const col = liquidRGB(S.indicator, C.pH);
+  setA('liquid', 'y', sy); setA('liquid', 'height', BK_BOTTOM - sy + 4);
+  setA('liquid', 'fill', col);
+  setA('surface', 'y', sy);
+
+  // Vorratsgefäß
+  const ry = RES_BOTTOM - Math.max(0, S.resVolT) / RES_ML * RES_H;
+  setA('resLiquid', 'y', ry); setA('resLiquid', 'height', RES_BOTTOM - ry + 4);
+  const ry2 = RES_BOTTOM - Math.max(0, S.resVolC) / RES_ML * RES_H;
+  setA('resLiquid2', 'y', ry2); setA('resLiquid2', 'height', RES_BOTTOM - ry2 + 4);
+
+  // Pipette
+  setA('pipette', 'transform', `translate(${pip.x.toFixed(1)} ${pip.y.toFixed(1)})`);
+  const h = pip.vol * PIP_PX;
+  setA('pipLiquid', 'y', -38 - h); setA('pipLiquid', 'height', h);
+  setA('pipTipLiquid', 'opacity', pip.vol > 1e-9 ? 1 : 0);
+  const sq = Math.max(pip.squeeze, pip.press || 0);          // Saugball wird zusammengedrückt
+  setA('pipBody', 'd', pipOutline(11 - 3.5 * sq));
+  setT('rPip', fmt(Math.max(0, pip.vol)) + ' mL');
+
+  // Tropfen und Strahl
+  let dh = '';
+  const k = S.realDrops ? 1 : 1.7;   // Modelltropfen etwas größer zeichnen
+  for (const d of drops) dh += `<path d="M${d.x} ${d.y-6*k} Q${d.x+4*k} ${d.y} ${d.x} ${d.y+3*k} Q${d.x-4*k} ${d.y} ${d.x} ${d.y-6*k} Z" fill="#cfe6f3" stroke="#7fa9c4" stroke-width=".8"/>`;
+  if (streamT > 0) dh += `<rect x="${pip.x-1.4}" y="${pip.y}" width="2.8" height="${Math.max(0, sy-pip.y)}" fill="#cfe6f3" opacity="${Math.min(1, streamT/150)}"/>`;
+  setH('drops', dh);
+
+  // Schlieren an der Eintropfstelle (lokal andere Indikatorfarbe) und Wellen
+  let fx = '';
+  for (const r of ripples){
+    const q = r.t / r.life;
+    if (S.indicator !== 'none')
+      fx += `<ellipse cx="${r.x + 10*q}" cy="${sy + 6 + 14*q}" rx="${5 + 34*q}" ry="${3 + 8*q}" fill="${r.col}" opacity="${0.85*(1-q)}"/>`;
+    fx += `<ellipse cx="${r.x}" cy="${sy+1}" rx="${3 + 26*q}" ry="${1 + 2.5*q}" fill="none" stroke="#fff" stroke-width="1.2" opacity="${0.8*(1-q)}"/>`;
+  }
+  setH('fx', fx);
+
+  // Rührfisch
+  stirAngle += dt * 0.012;
+  setA('stirbar', 'rx', Math.max(3, Math.abs(Math.cos(stirAngle)) * 18).toFixed(1));
+  setA('knob', 'transform', 'rotate(40 270 466)');
+
+  // pH-Meter
+  setA('electrode', 'display', S.meter ? 'inline' : 'none');
+  setT('meterText', fmt(C.pH, 2));
+}
+
+/* Pipetten-Animation: Warteschlange aus Bewegungs- und Füllschritten */
+const ease = k => k < .5 ? 2*k*k : 1 - (-2*k + 2)**2 / 2;
+function runQueue(dt){
+  if (!queue.length) return;
+  const q = queue[0];
+  const rkey = q.res === 'C' ? 'resVolC' : 'resVolT';
+  if (!q.init){ q.init = true; q.t = 0; q.x0 = pip.x; q.y0 = pip.y; q.v0 = pip.vol; q.r0 = S[rkey];
+    if (q.x == null) q.x = pip.x; if (q.y == null) q.y = pip.y; }
+  q.t += dt;
+  const k = Math.min(1, q.t / q.dur), e = ease(k);
+  if (q.type === 'move'){ pip.x = q.x0 + (q.x - q.x0) * e; pip.y = q.y0 + (q.y - q.y0) * e; }
+  if (q.type === 'fill'){ pip.vol = q.v0 + (q.to - q.v0) * e; S[rkey] = q.r0 - (pip.vol - q.v0); pip.squeeze = Math.sin(k * Math.PI); }
+  if (k >= 1){
+    pip.squeeze = 0;
+    queue.shift();
+    if (q.done) q.done();
+    if (!queue.length) updateUI();
+  }
+}
+function travel(target){   // anheben, umsetzen, absenken
+  const dist = Math.abs(target.x - pip.x) + 1;
+  if (dist > 2) queue.push({type:'move', y: LIFT_Y, dur: 450}, {type:'move', x: target.x, y: LIFT_Y, dur: 350 + dist * 3});
+  queue.push({type:'move', x: target.x, y: target.y, dur: 450});
+}
+
+function stepLab(dt){
+  const f = dt / 16.7;
+  runQueue(dt);
+  if (pip.press > 0) pip.press = Math.max(0, pip.press - dt / 350);
+  const sy = surfaceY();
+  for (const d of drops){ d.vy += 0.1*f; d.y += d.vy*f; setCarrierProgress(d.carrier, (d.y - d.y0) / Math.max(1, sy - d.y0)); }
+  const landed = drops.filter(d => d.y >= sy);
+  drops = drops.filter(d => d.y < sy);
+  for (const d of landed){ if (d.src === 'C') S.pendC -= d.v; else S.pendT -= d.v; d.carrier.released = true; addVolume(d.v, d.src); addRipple(d.x, d.src); }
+  for (const r of ripples) r.t += dt;
+  ripples = ripples.filter(r => r.t < r.life);
+  if (streamT > 0) streamT = Math.max(0, streamT - dt);
+
+  if (S.fast){
+    streamT = 200;                           // Strahl sichtbar, solange die Pipette ausläuft
+    S.fastAcc += dt * FAST_RATE / 1000;
+    while (S.fastAcc >= 1){ S.fastAcc -= 1; if (!spawnDrop()){ S.fast = false; break; } }
+  }
+  if (S.running){
+    S.dropAcc += dt * S.speed / 1000;
+    while (S.dropAcc >= 1){ S.dropAcc -= 1; if (!spawnDrop()) break; }
+  }
+}
+function addRipple(x, src){
+  if (ripples.length > 12) return;
+  const pHdrop = src === 'C' ? 14 - titrantPH() : titrantPH();   // Farbe der eintropfenden Lösung
+  ripples.push({x, t:0, life:900, col: liquidRGB(S.indicator, pHdrop)});
+}
+
+/* =====================================================================
+   AKTIONEN
+   ===================================================================== */
+const busy = () => queue.length > 0;
+const ready = () => !busy() && S.pipAt === 'beaker' && pip.vol > 1e-9;
+const idle = () => ready() && !S.fast;
+
+function takeUp(){
+  if (busy() || pip.vol > 1e-9) return;
+  const src = S.src, x = RES_X[src];
+  if (S[src === 'C' ? 'resVolC' : 'resVolT'] < S.pipSel){ setMsg('Das Vorratsgefäß ist fast leer. Setze den Versuch zurück.'); return; }
+  S.msg = ''; S.pipAt = 'moving'; pip.src = src;
+  travel({x, y: POS.resUp.y});
+  queue.push({type:'move', x, y: POS.resDown.y, dur: 700});
+  queue.push({type:'fill', to: S.pipSel, dur: 1300, res: src});
+  queue.push({type:'move', x, y: POS.resUp.y, dur: 700});
+  queue.push({type:'move', y: LIFT_Y, dur: 400}, {type:'move', x: POS.beaker.x, y: LIFT_Y, dur: 800});
+  queue.push({type:'move', x: POS.beaker.x, y: POS.beaker.y, dur: 450, done: () => { S.pipAt = 'beaker'; }});
+  updateUI();
+}
+function giveBack(){
+  if (busy() || pip.vol <= 1e-9) return;
+  stopRun(); S.msg = ''; S.pipAt = 'moving';
+  const x = RES_X[pip.src];
+  travel({x, y: POS.resUp.y});
+  queue.push({type:'move', x, y: POS.resDown.y, dur: 700});
+  queue.push({type:'fill', to: 0, dur: 1000, res: pip.src});
+  queue.push({type:'move', x, y: POS.resUp.y, dur: 700, done: () => { S.pipAt = 'res'; pip.vol = 0; }});
+  updateUI();
+}
+function nextDropV(){
+  const d = dropML();
+  // ein sehr kleiner Rest wird mit dem letzten Tropfen abgegeben
+  return pip.vol - d < 0.25 * d ? pip.vol : d;
+}
+function canAdd(v){
+  if (S.vV + vT() + S.pendT + S.pendC + v > BEAKER_ML * 0.97){ setMsg('Das Becherglas ist voll. Setze den Versuch zurück.'); return false; }
+  return true;
+}
+function spawnDrop(){
+  if (!ready()){
+    stopRun();
+    if (!busy()) setMsg(pip.vol <= 1e-9 ? 'Die Pipette ist leer. Nimm neue Lösung auf.' : 'Die Pipette ist noch nicht über dem Becherglas.');
+    return false;
+  }
+  const v = nextDropV();
+  if (!canAdd(v)){ stopRun(); return false; }
+  const carrier = newCarrier();
+  const src = pip.src;
+  spawnDropParticles(carrier, 'drop', chemAt(S.vTit + S.pendT + (src === 'T' ? v : 0), S.vCnt + S.pendC + (src === 'C' ? v : 0)), src);
+  pip.vol = Math.max(0, pip.vol - v);
+  if (src === 'C') S.pendC += v; else S.pendT += v;
+  drops.push({x: pip.x, y: pip.y + 2, y0: pip.y + 2, vy: 0.2, v, carrier, src});
+  pip.press = 1;
+  if (pip.vol <= 1e-9){ pip.vol = 0; S.fast = false; if (S.running){ stopRun(); S.msg = 'Die Pipette ist leer. Nimm neue Lösung auf.'; } }
+  updateUI();
+  return true;
+}
+/* Ganzer Inhalt: Die Pipette läuft zügig aus – als schnelle Tropfenfolge, damit jede Portion
+   ihre Teilchen mitbringt und Stoff- und Teilchenebene synchron bleiben */
+const FAST_RATE = 8;   // Tropfen pro Sekunde beim Auslaufen
+function releaseAll(){
+  if (!ready()) return;
+  stopRun(); S.msg = '';
+  S.fast = true; S.fastAcc = 1;
+  updateUI();
+}
+function addVolume(v, src){
+  if (src === 'C') S.vCnt += v;
+  else {
+    S.vTit += v;
+    if (S.vCnt === 0 && Math.abs(S.vTit - Veq()) < 1e-9 * Math.max(1, Veq())) S.vTit = Veq();  // Rundungsfehler abfangen
+  }
+  C = chem();
+  S.data.push({v: vT(), pH: C.pH, src, phase: C.phase});
+  curveDirty = true;
+  updateUI();
+}
+function setMsg(m){ S.msg = m; updateUI(); }
+function stopRun(){ S.running = false; $('btnRun').classList.remove('on'); $('btnRun').textContent = '▶ Tropfenweise abgeben'; }
+function reset(){
+  stopRun();
+  S.vTit = 0; S.vCnt = 0; S.pendT = 0; S.pendC = 0; S.dropAcc = 0; S.msg = '';
+  S.resVolT = RES_START; S.resVolC = RES_START; S.pipAt = 'res';
+  queue = []; pip.x = POS.resUp.x; pip.y = POS.resUp.y; pip.vol = 0; pip.squeeze = 0; pip.src = 'T';
+  drops = []; ripples = []; streamT = 0; S.fast = false;
+  C = chem();
+  S.data = [{v: 0, pH: C.pH, src: 'T', phase: 'start'}];
+  initParticles();
+  updateLabels();
+  curveDirty = true;
+  updateUI();
+}
+
+/* =====================================================================
+   TITRATIONSKURVE
+   ===================================================================== */
+const CW = 640, CH = 330;
+const cc = setupCanvas($('curve'), CW, CH);
+let curveDirty = true;
+function niceCeil(x){ const p = 10 ** Math.floor(Math.log10(x));
+  for (const m of [1, 2, 2.5, 5, 10]) if (m*p >= x - 1e-9) return m*p; return 10*p; }
+function drawCurve(){
+  const c = cc, L = 50, R = 18, T = 16, B = 46, w = CW-L-R, h = CH-T-B;
+  c.clearRect(0,0,CW,CH);
+  c.fillStyle = '#fff'; c.fillRect(0,0,CW,CH);
+  if (!S.meter){
+    c.fillStyle = '#5b6475'; c.font = '16px system-ui, sans-serif'; c.textAlign = 'center';
+    c.fillText('Schalte das pH-Meter ein, um die Titrationskurve zu sehen.', CW/2, CH/2);
+    return;
+  }
+  const veq = Veq();
+  const xmax = niceCeil(Math.max(5, vT()*1.08, Math.min(2*veq, 100)));
+  const step = niceCeil(xmax / 6);
+  const X = v => L + v / xmax * w, Y = p => T + (14 - p) / 14 * h;
+
+  // Gitter
+  c.font = '12px system-ui, sans-serif'; c.textBaseline = 'middle';
+  for (let p = 0; p <= 14; p++){
+    c.strokeStyle = p === 7 ? '#b8c2cf' : '#eef1f5'; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L, Y(p)); c.lineTo(L+w, Y(p)); c.stroke();
+    if (p % 2 === 0){ c.fillStyle = '#5b6475'; c.textAlign = 'right'; c.fillText(p, L-8, Y(p)); }
+  }
+  c.textBaseline = 'top';
+  for (let v = 0; v <= xmax + 1e-9; v += step){
+    c.strokeStyle = '#eef1f5'; c.beginPath(); c.moveTo(X(v), T); c.lineTo(X(v), T+h); c.stroke();
+    c.fillStyle = '#5b6475'; c.textAlign = 'center'; c.fillText(fmt(v, step < 1 ? 1 : 0), X(v), T+h+6);
+  }
+  c.strokeStyle = '#5b6475'; c.lineWidth = 1.5;
+  c.beginPath(); c.moveTo(L, T); c.lineTo(L, T+h); c.lineTo(L+w, T+h); c.stroke();
+  c.fillStyle = '#1d2433'; c.font = '600 13px system-ui, sans-serif'; c.textAlign = 'center';
+  c.fillText(S.vCnt > 0 ? 'insgesamt zugegebenes Volumen in mL' : `V(${names().t}) in mL`, L + w/2, T+h+24);
+  c.save(); c.translate(14, T + h/2); c.rotate(-Math.PI/2); c.fillText('pH', 0, 0); c.restore();
+
+  // Äquivalenzpunkt
+  const reached = S.vCnt === 0 && vT() >= veq - 1e-9;
+  const eqPt = S.vCnt > 0 ? S.data.find(p => p.phase === 'eq') : null;
+  if (eqPt){
+    c.beginPath(); c.arc(X(eqPt.v), Y(7), 6, 0, Math.PI*2); c.fillStyle = '#e8590c'; c.fill();
+    c.font = '600 12px system-ui, sans-serif'; c.textBaseline = 'middle'; c.textAlign = 'left';
+    c.fillText('Neutralpunkt (pH 7)', X(eqPt.v) + 10, Y(7) + 16);
+  }
+  if (reached && veq <= xmax){
+    c.setLineDash([5,4]); c.strokeStyle = '#e8590c'; c.lineWidth = 1.5;
+    c.beginPath(); c.moveTo(X(veq), T); c.lineTo(X(veq), T+h); c.stroke(); c.setLineDash([]);
+    c.beginPath(); c.arc(X(veq), Y(7), 6, 0, Math.PI*2); c.fillStyle = '#e8590c'; c.fill();
+    c.font = '600 12px system-ui, sans-serif'; c.textBaseline = 'middle';
+    const right = X(veq) < L + w*0.6;
+    c.textAlign = right ? 'left' : 'right';
+    c.fillText(`Äquivalenzpunkt (${fmt(veq)} mL | pH 7)`, X(veq) + (right ? 10 : -10), Y(7) + (S.vorlage==='acid' ? 16 : -16));
+  }
+
+  // Messkurve
+  const pts = S.data, col = src => src === 'C' ? '#c2410c' : '#1f6feb';
+  c.lineWidth = 2.5; c.lineCap = 'round';
+  for (let i = 1; i < pts.length; i++){      // Abschnitte mit Gegenlösung orange
+    c.strokeStyle = col(pts[i].src);
+    c.beginPath(); c.moveTo(X(pts[i-1].v), Y(Math.max(0, Math.min(14, pts[i-1].pH))));
+    c.lineTo(X(pts[i].v), Y(Math.max(0, Math.min(14, pts[i].pH)))); c.stroke();
+  }
+  if (S.vCnt > 0){
+    c.font = '12px system-ui, sans-serif'; c.textAlign = 'right'; c.textBaseline = 'top';
+    c.fillStyle = '#1f6feb'; c.fillText(`blau: ${names().t}`, L + w - 4, T + 4);
+    c.fillStyle = '#c2410c'; c.fillText(`orange: ${names().v}`, L + w - 4, T + 20);
+  }
+  const last = pts[pts.length-1];
+  c.beginPath(); c.arc(X(last.v), Y(last.pH), 5, 0, Math.PI*2); c.fillStyle = '#1f6feb'; c.fill();
+}
+
+/* =====================================================================
+   OBERFLÄCHE AKTUALISIEREN
+   ===================================================================== */
+function updateLabels(){
+  const n = names();
+  $('lblCV').textContent = `c(${n.vF})`; $('lblCV').title = `Konzentration ${n.v} im Becherglas`;
+  $('btnDrop').textContent = `💧 1 Tropfen (${fmtV(dropML())} mL)`;
+  $('resLabel').textContent = n.t;
+  $('resLabelB').textContent = n.v;
+  $('resLabelB2').textContent = `c = ${fmt(S.cT, S.cT < 0.1 ? 2 : (S.cT < 1 ? 1 : 0))} mol/L`;
+  $('selSrc').options[0].text = n.t; $('selSrc').options[1].text = n.v;
+  $('resLabel2').textContent = `c = ${fmt(S.cT, S.cT < 0.1 ? 2 : (S.cT < 1 ? 1 : 0))} mol/L`;
+  $('lblCT').textContent = `c(${n.tF})`; $('lblCT').title = `Konzentration ${n.t} im Vorratsgefäß`;
+  $('labCaption').innerHTML =
+    `<b>Becherglas:</b> ${fmt(S.vV,0)} mL ${n.v}, c = ${fmt(S.cV, S.cV < 0.1 ? 2 : 1)} mol/L &nbsp;|&nbsp; ` +
+    `<b>Vorratsgefäße:</b> ${n.t} und ${n.v}, c = ${fmt(S.cT, S.cT < 0.1 ? 2 : 1)} mol/L`;
+  if (S.vorlage === 'acid'){
+    $('eqStoff').innerHTML = `HCl + NaOH → NaCl + ${F.H2O}`;
+    $('eqIon').innerHTML = `<span class="core">${F.H3O}</span> + <span class="spect">${F.Cl}</span> + <span class="spect">${F.Na}</span> + <span class="core">${F.OH}</span> → <span class="spect">${F.Na}</span> + <span class="spect">${F.Cl}</span> + 2 ${F.H2O}`;
+  } else {
+    $('eqStoff').innerHTML = `NaOH + HCl → NaCl + ${F.H2O}`;
+    $('eqIon').innerHTML = `<span class="spect">${F.Na}</span> + <span class="core">${F.OH}</span> + <span class="core">${F.H3O}</span> + <span class="spect">${F.Cl}</span> → <span class="spect">${F.Na}</span> + <span class="spect">${F.Cl}</span> + 2 ${F.H2O}`;
+  }
+  $('eqCore').innerHTML = `<span class="core">${F.H3O} + ${F.OH} → 2 ${F.H2O}</span>`;
+  const cs = Object.entries(N0_BY_CONC).sort((a,b) => a[0]-b[0])
+    .map(([c, k]) => `${fmt(+c, +c < 0.1 ? 2 : (+c < 1 ? 1 : 0))} mol/L → ${k}`).join(', ');
+  $('modelNote').innerHTML =
+    `Modell: Je höher die Konzentration der Vorlage, desto mehr ${F[names().vIon]}-Ionen sind in der Lupe (${cs}). ` +
+    `Die Anzahlen sind stark vereinfacht – in Wirklichkeit steigt die Teilchenzahl von Stufe zu Stufe auf das Zehnfache. ` +
+    (S.realDrops
+      ? `Die Ionen treten in dem Moment in die Lupe ein, in dem links der Tropfen auf die Lösung trifft. Ein echter Tropfen enthält nur wenig Stoff: Im Modell bringt etwa jeder ${Math.max(1, Math.round(S.cV * S.vV / (S.cT * DROP_REAL * n0())))}. Tropfen ein Ionenpaar mit. `
+      : `Jeder Tropfen bringt ${PAIRS_PER_DROP} Ionenpaare (${F[names().tIon]} und ${F[names().tCo]}) mit – sie treten in dem Moment in die Lupe ein, in dem links der Tropfen auf die Lösung trifft. Damit das Modell stimmt, ist ein Tropfen hier ${fmtV(dropML())} mL groß (ein echter Tropfen hat nur ca. 0,05 mL). `) +
+    `Nach dem Äquivalenzpunkt kommen höchstens ${EXTRA_PAIRS} überschüssige Ionenpaare hinzu, damit das Bild übersichtlich bleibt. ` +
+    `Mit jedem Tropfen kommen auch Wassermoleküle des Lösungsmittels hinzu (blass dargestellt); dafür verlassen andere den Ausschnitt. Das Lösungsmittel ist nur angedeutet – in Wirklichkeit gibt es viel mehr Wassermoleküle. Gelb leuchtende Wassermoleküle sind gerade durch Neutralisation entstanden.`;
+  updateScale();
+  updateSolution();
+}
+
+function updateScale(){
+  const ind = INDICATORS[S.indicator];
+  $('indDesc').textContent = ind.desc;
+  let g = [];
+  for (let p = 0; p <= 14; p += 0.5) g.push(`${liquidRGB(S.indicator, p)} ${(p/14*100).toFixed(1)}%`);
+  $('scalebar').style.background = `linear-gradient(to right, ${g.join(',')})`;
+  const rg = $('scaleRange');
+  if (ind.range){ rg.style.display = ''; rg.style.left = ind.range[0]/14*100 + '%'; rg.style.width = (ind.range[1]-ind.range[0])/14*100 + '%'; }
+  else rg.style.display = 'none';
+}
+
+function updateSolution(){
+  if (!S.showSolution){ $('solution').textContent = ''; $('btnSol').textContent = 'Lösung anzeigen'; return; }
+  $('btnSol').textContent = 'Lösung ausblenden';
+  $('solution').innerHTML = `V<sub>Äq</sub> = c(Vorlage) · V(Vorlage) / c(Maßlösung) = ${fmt(S.cV, S.cV<0.1?2:1)} · ${fmt(S.vV,0)} mL / ${fmt(S.cT, S.cT<0.1?2:1)} = <b>${fmt(Veq())} mL</b>`;
+}
+
+function infoText(){
+  const n = names(), acid = S.vorlage === 'acid';
+  const vIonF = F[n.vIon], tIonF = F[n.tIon], tCoF = F[n.tCo], vCoF = F[n.vCo];
+  const vIonName = acid ? 'Oxonium-Ionen' : 'Hydroxid-Ionen';
+  const tIonName = acid ? 'Hydroxid-Ionen' : 'Oxonium-Ionen';
+  const tIonSing = acid ? 'Hydroxid-Ion' : 'Oxonium-Ion';
+  const vIonSing = acid ? 'Oxonium-Ion' : 'Hydroxid-Ion';
+  const charV = acid ? 'sauer' : 'alkalisch', charT = acid ? 'alkalisch' : 'sauer';
+  switch (C.phase){
+    case 'start':
+      return `Im Becherglas befindet sich ${n.v}. Die Lösung ist ${charV}, weil sie viele ${vIonName} (${vIonF}) enthält. ` +
+             `Außerdem liegen ${acid ? 'Chlorid-Ionen' : 'Natrium-Ionen'} (${vCoF}) vor. Nimm nun mit der Pipette ${n.t} aus dem Vorratsgefäß auf und gib sie tropfenweise ins Becherglas.`;
+    case 'before': {
+      let t = `Die Lösung ist noch ${charV}: Es liegen mehr ${vIonName} als ${tIonName} vor. ` +
+              `Jedes zugetropfte ${tIonSing} (${tIonF}) reagiert mit einem ${vIonSing} zu zwei Wassermolekülen. ` +
+              `Die ${acid ? 'Natrium-Ionen' : 'Chlorid-Ionen'} (${tCoF}) nehmen nicht an der Reaktion teil (Zuschauer-Ionen).`;
+      if (C.ratio > 0.9) t += ` <b>Der Äquivalenzpunkt ist nah – jetzt nur noch tropfenweise zugeben!</b>`;
+      return t;
+    }
+    case 'eq':
+      return `<b>Äquivalenzpunkt erreicht:</b> Alle ${vIonName} haben mit ${tIonName} zu Wasser reagiert. ` +
+             `Es liegt eine neutrale Natriumchlorid-Lösung vor (pH = 7). In der Lösung befinden sich nur noch Natrium-Ionen, Chlorid-Ionen und Wassermoleküle.`;
+    case 'after':
+      return `Die Lösung ist jetzt ${charT}: Es wurde mehr ${n.t} zugegeben, als zur Neutralisation nötig war. ` +
+             `Die überschüssigen ${tIonName} (${tIonF}) finden keine ${vIonName} mehr als Reaktionspartner und bleiben in der Lösung.` +
+             `<div class="note"><b>Tipp:</b> Wähle unter „Zugabe mit der Pipette“ bei „Lösung“ ${n.v} aus und tropfe vorsichtig zurück, um den Neutralpunkt doch noch zu erreichen.</div>`;
+  }
+}
+
+function updateSign(){
+  const acid = S.vorlage === 'acid', n = names();
+  const cStr = c => fmt(c, c < 0.1 ? 2 : (c < 1 ? 1 : 0));
+  let l1 = '', l2 = '', l3 = '';
+  switch (C.phase){
+    case 'start':  l1 = n.v; l2 = ''; l3 = `c = ${cStr(S.cV)} mol/L`; break;
+    case 'before': l1 = n.v + ' +'; l2 = 'Natriumchlorid-Lsg.'; l3 = acid ? 'noch sauer' : 'noch alkalisch'; break;
+    case 'eq':     l1 = 'Natriumchlorid-'; l2 = 'Lösung'; l3 = 'neutral'; break;
+    case 'after':  l1 = 'Natriumchlorid-Lsg.'; l2 = '+ ' + n.t; l3 = acid ? 'jetzt alkalisch' : 'jetzt sauer'; break;
+  }
+  $('sol1').textContent = l1; $('sol2').textContent = l2; $('sol3').textContent = l3;
+  $('sol4').textContent = `V = ${fmt(S.vV + vT())} mL`;
+}
+function updateUI(){
+  updateSign();
+  $('rAdded').textContent = fmt(vT()) + ' mL';
+  $('rTotal').textContent = fmt(S.vV + vT()) + ' mL';
+  $('rPH').textContent = S.meter ? fmt(C.pH) : 'aus';
+
+  let html = infoText();
+  let obs = [];
+  if (S.indicator !== 'none') obs.push(`${INDICATORS[S.indicator].name} färbt die Lösung <b>${colorName(S.indicator, C.pH)}</b>.`);
+  if (S.meter) obs.push(`Das pH-Meter zeigt <b>pH ${fmt(C.pH)}</b>.`);
+  if (!obs.length) obs.push('Ohne Indikator und pH-Meter sieht man der Lösung die Neutralisation nicht an – wähle einen Indikator oder schalte das pH-Meter ein.');
+  html += `<div class="obs"><b>Beobachtung:</b> ${obs.join(' ')}</div>`;
+  if (S.indicator === 'phenolphthalein' && C.pH < 8.2 && C.phase !== 'start')
+    html += `<div class="note">Hinweis: Phenolphthalein schlägt erst ab pH 8,2 um. Die Farbänderung zeigt den Äquivalenzpunkt trotzdem sehr genau an, weil der pH-Wert dort sprunghaft steigt bzw. fällt.</div>`;
+  if (S.vV + Veq() > BEAKER_ML * 0.97)
+    html += `<div class="warn">Hinweis: Bis zum Äquivalenzpunkt bräuchte man ${fmt(Veq(),0)} mL Maßlösung – das passt nicht ins Becherglas. Wähle eine höhere Konzentration der Maßlösung.</div>`;
+  if (S.msg) html += `<div class="warn">${S.msg}</div>`;
+  $('info').innerHTML = html;
+
+  const mk = $('scaleMarker');
+  mk.style.display = S.meter ? '' : 'none';
+  mk.style.left = Math.max(0, Math.min(14, C.pH)) / 14 * 100 + '%';
+
+  const b = busy(), r = ready();
+  $('btnTake').disabled = b || pip.vol > 1e-9;
+  $('selSrc').disabled = b || pip.vol > 1e-9;
+  $('selPip').disabled = b || pip.vol > 1e-9;
+  const fr = r && !S.fast;
+  $('btnDrop').disabled = !fr; $('btnRun').disabled = !fr && !S.running; $('btnML').disabled = !fr || S.running;
+  $('btnBack').disabled = b || S.fast || pip.vol <= 1e-9;
+}
+
+/* =====================================================================
+   EREIGNISSE
+   ===================================================================== */
+$('selVorlage').onchange = e => { S.vorlage = e.target.value; S.src = 'T'; $('selSrc').value = 'T'; reset(); };
+$('selCV').onchange = e => { S.cV = +e.target.value; reset(); };
+$('selCT').onchange = e => { S.cT = +e.target.value; reset(); };
+$('rngVV').oninput = e => { S.vV = +e.target.value; $('outVV').textContent = S.vV + ' mL'; reset(); };
+$('selInd').onchange = e => { S.indicator = e.target.value; updateScale(); updateUI(); };
+$('chkMeter').onchange = e => { S.meter = e.target.checked; curveDirty = true; updateUI(); };
+$('btnTake').onclick = takeUp;
+$('btnBack').onclick = giveBack;
+$('selPip').onchange = e => { S.pipSel = +e.target.value; };
+$('selSrc').onchange = e => { S.src = e.target.value; };
+$('btnDrop').onclick = () => { S.msg = ''; spawnDrop(); };
+$('btnML').onclick = releaseAll;
+$('btnRun').onclick = () => {
+  if (S.fast){
+    streamT = 200;                           // Strahl sichtbar, solange die Pipette ausläuft
+    S.fastAcc += dt * FAST_RATE / 1000;
+    while (S.fastAcc >= 1){ S.fastAcc -= 1; if (!spawnDrop()){ S.fast = false; break; } }
+  }
+  if (S.running){ stopRun(); return; }
+  S.msg = ''; S.running = true; S.dropAcc = 1;
+  $('btnRun').classList.add('on'); $('btnRun').textContent = '⏸ Pause';
+  updateUI();
+};
+$('rngSpeed').oninput = e => { S.speed = +e.target.value * 0.25; $('outSpeed').textContent = 'alle ' + fmt(1 / S.speed, 1) + ' s'; };
+$('chkReal').onchange = e => { S.realDrops = e.target.checked; reset(); };
+$('btnReset').onclick = reset;
+$('chkHide').onchange = e => {
+  $('particlePanel').style.display = e.target.checked ? 'none' : '';
+  $('levels').classList.toggle('single', e.target.checked);
+  fitLayout();
+};
+$('chkWater').onchange = e => { S.showWater = e.target.checked; };
+$('btnSol').onclick = () => { S.showSolution = !S.showSolution; updateSolution(); };
+
+/* =====================================================================
+   ANIMATIONSSCHLEIFE
+   ===================================================================== */
+let lastT = performance.now();
+function loop(now){
+  const dt = Math.min(50, now - lastT); lastT = now;
+  stepLab(dt);
+  renderLab(dt);
+  stepTube(dt);
+  stepParticles(dt);
+  drawParticles();
+  if (++countTick % 6 === 0) updateCounts();
+  if (curveDirty){ drawCurve(); curveDirty = false; }
+  requestAnimationFrame(loop);
+}
+reset();
+updateCounts();
+requestAnimationFrame(loop);
+
+/* =====================================================================
+   LAYOUT: Bedienleiste, Stoff- und Teilchenebene ohne Scrollen sichtbar
+   ===================================================================== */
+function fitLayout(){
+  const items = [[$('lab'), 496/500], [$('particles'), PW/CH_P]];
+  for (const [el] of items) el.style.width = '';
+  $('ctrl').style.maxHeight = '';
+  if (window.innerWidth <= 900) return;              // schmale Bildschirme: untereinander, scrollen erlaubt
+  const docTop = el => el.getBoundingClientRect().top + window.scrollY;
+  for (const [el, ratio] of items){
+    const panel = el.closest('.panel');
+    if (panel.offsetParent === null) continue;       // ausgeblendet
+    const avail = window.innerHeight - docTop(panel) - 10;
+    const fixed = panel.offsetHeight - el.getBoundingClientRect().height;
+    const h = Math.max(260, avail - fixed);
+    const w = Math.min(panel.clientWidth - 28, h * ratio);
+    el.style.width = Math.floor(w) + 'px';
+  }
+  $('ctrl').style.maxHeight = Math.max(300, window.innerHeight - docTop($('ctrl')) - 10) + 'px';
+}
+window.addEventListener('resize', fitLayout);
+fitLayout();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitLayout);
+</script>
+</body>
+</html>
