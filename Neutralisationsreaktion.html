@@ -49,6 +49,8 @@ input[type=range]{accent-color:var(--accent)}
 .acts .field.inline{grid-template-columns:auto 1fr}
 .btn.wide{width:100%}
 .ctrl .btn{font-size:.9rem;padding:6px 10px}
+.check.sub-check{margin-left:22px}
+.check input:disabled + *, .check:has(input:disabled){color:#9aa1ad;cursor:not-allowed}
 details.teacher{margin-top:10px;padding-top:8px;border-top:1px solid var(--line);font-size:.9rem}
 details.teacher summary{cursor:pointer;font-weight:700;margin-bottom:4px}
 details.teacher .check{margin:4px 0;font-size:.9rem}
@@ -144,6 +146,7 @@ canvas{width:100%;height:auto;display:block;border-radius:8px}
       </select>
     </label>
     <label class="check"><input type="checkbox" id="chkMeter"> pH-Meter verwenden</label>
+    <label class="check sub-check"><input type="checkbox" id="chkChart" disabled> mit Diagramm</label>
   </div>
 
   <div class="sec">Zugabe mit der Pipette</div>
@@ -410,6 +413,7 @@ const S = {
   cT: 0.1,           // Konzentration der Maßlösung (mol/L)
   indicator: 'universal',
   meter: false,
+  chart: false,      // Titrationskurve zeichnen (nur zusammen mit dem pH-Meter)
   vTit: 0,           // zugegebenes Volumen Maßlösung in mL
   vCnt: 0,           // zugegebenes Volumen Gegenlösung (zum Zurücktitrieren) in mL
   pendT: 0, pendC: 0,// Volumen der Tropfen in der Luft (je Lösung)
@@ -1053,9 +1057,10 @@ function drawCurve(){
   const c = cc, L = 50, R = 18, T = 16, B = 46, w = CW-L-R, h = CH-T-B;
   c.clearRect(0,0,CW,CH);
   c.fillStyle = '#fff'; c.fillRect(0,0,CW,CH);
-  if (!S.meter){
+  if (!S.meter || !S.chart){
     c.fillStyle = '#5b6475'; c.font = '16px system-ui, sans-serif'; c.textAlign = 'center';
-    c.fillText('Schalte das pH-Meter ein, um die Titrationskurve zu sehen.', CW/2, CH/2);
+    c.fillText(S.meter ? 'Wähle „mit Diagramm“, um die Titrationskurve zu sehen.'
+                       : 'Schalte das pH-Meter mit Diagramm ein, um die Titrationskurve zu sehen.', CW/2, CH/2);
     return;
   }
   const veq = Veq();
@@ -1253,7 +1258,13 @@ $('selCV').onchange = e => { S.cV = +e.target.value; reset(); };
 $('selCT').onchange = e => { S.cT = +e.target.value; reset(); };
 $('rngVV').oninput = e => { S.vV = +e.target.value; $('outVV').textContent = S.vV + ' mL'; reset(); };
 $('selInd').onchange = e => { S.indicator = e.target.value; updateScale(); updateUI(); };
-$('chkMeter').onchange = e => { S.meter = e.target.checked; curveDirty = true; updateUI(); };
+$('chkMeter').onchange = e => {
+  S.meter = e.target.checked;
+  $('chkChart').disabled = !S.meter;
+  if (!S.meter){ S.chart = false; $('chkChart').checked = false; }
+  curveDirty = true; updateUI(); fitLayout();
+};
+$('chkChart').onchange = e => { S.chart = e.target.checked; curveDirty = true; };
 $('btnTake').onclick = takeUp;
 $('btnBack').onclick = giveBack;
 $('selPip').onchange = e => { S.pipSel = +e.target.value; };
