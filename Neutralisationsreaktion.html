@@ -332,7 +332,6 @@ canvas{width:100%;height:auto;display:block;border-radius:8px}
    KONFIGURATION – hier können Lehrkräfte Werte anpassen
    ===================================================================== */
 const DROP_REAL   = 0.05;   // Volumen eines echten Tropfens in mL
-const PAIRS_PER_DROP = 2;  // Modell: Ionenpaare pro Tropfen
 const RES_ML      = 150;    // Fassungsvermögen des Vorratsgefäßes in mL
 const RES_START   = 120;    // Füllung des Vorratsgefäßes zu Beginn in mL
 const BEAKER_ML   = 60;     // Fassungsvermögen des Becherglases in mL
@@ -421,7 +420,7 @@ const S = {
   pipSel: 1,         // gewähltes Pipettenvolumen in mL
   pipAt: 'res',      // 'res' = über dem Vorratsgefäß, 'beaker' = über dem Becherglas, 'moving'
   resVolT: RES_START, resVolC: RES_START,
-  realDrops: false,  // false: Modelltropfen (jeder Tropfen bringt PAIRS_PER_DROP Ionenpaare)
+  realDrops: false,  // false: Modelltropfen (jeder Tropfen = halbe aufgenommene Menge)
   running: false, speed: 0.5, dropAcc: 0,
   showWater: true, showSolution: false,
   data: [], msg: ''
@@ -439,10 +438,12 @@ function setH(id, html){ const e = $(id); if (e._h !== html){ e._h = html; e.inn
 function setT(id, txt){ const e = $(id); if (e._t !== txt){ e._t = txt; e.textContent = txt; } }
 const fmt = (x, d = 2) => x.toFixed(d).replace('.', ',');
 const fmtV = v => fmt(v, Math.abs(v*100 - Math.round(v*100)) > 1e-6 ? 3 : 2);  // Volumen mit 2 bzw. 3 Nachkommastellen
-/* Tropfenvolumen: Im Modell ist ein Tropfen so groß, dass er genau PAIRS_PER_DROP Ionenpaare
-   mitbringt – so stimmen Stoff- und Teilchenebene überein. Wahlweise echte Tropfen (0,05 mL). */
-const n0 = () => N0_BY_CONC[S.cV] || 16;
-const dropML = () => S.realDrops ? DROP_REAL : (S.cV * S.vV / S.cT) / (n0() / PAIRS_PER_DROP);
+const n0 = () => N0_BY_CONC[S.cV] || 16;   // Vorlage-Ionen in der Lupe
+/* Tropfenvolumen: Im Modell ist jeder Tropfen halb so groß wie die mit der Pipette aufgenommene
+   Menge – eine Pipettenfüllung ergibt also genau zwei Tropfen. Wahlweise echte Tropfen (0,05 mL). */
+const dropML = () => S.realDrops ? DROP_REAL : ((pip.vol > 1e-9 && pip.fill) ? pip.fill : S.pipSel) / 2;
+/* Ionenpaare, die ein Tropfen im Teilchenbild im Mittel mitbringt */
+const pairsPerDrop = () => n0() * S.cT * dropML() / (S.cV * S.vV);
 const vT = () => S.vTit + S.vCnt;                           // insgesamt zugegebenes Volumen in mL
 const names = () => S.vorlage === 'acid'
   ? {v:'Salzsäure', vF:'HCl', t:'Natronlauge', tF:'NaOH', vIon:'H3O', vCo:'Cl', tIon:'OH', tCo:'Na'}
@@ -962,7 +963,7 @@ function takeUp(){
   if (busy() || pip.vol > 1e-9) return;
   const src = S.src, x = RES_X[src];
   if (S[src === 'C' ? 'resVolC' : 'resVolT'] < S.pipSel){ setMsg('Das Vorratsgefäß ist fast leer. Setze den Versuch zurück.'); return; }
-  S.msg = ''; S.pipAt = 'moving'; pip.src = src;
+  S.msg = ''; S.pipAt = 'moving'; pip.src = src; pip.fill = S.pipSel; updateLabels();
   travel({x, y: POS.resUp.y});
   queue.push({type:'move', x, y: POS.resDown.y, dur: 700});
   queue.push({type:'fill', to: S.pipSel, dur: 1300, res: src});
@@ -1005,7 +1006,7 @@ function spawnDrop(){
   if (src === 'C') S.pendC += v; else S.pendT += v;
   drops.push({x: pip.x, y: pip.y + 2, y0: pip.y + 2, vy: 0.2, v, carrier, src});
   pip.press = 1;
-  if (pip.vol <= 1e-9){ pip.vol = 0; S.fast = false; if (S.running){ stopRun(); S.msg = 'Die Pipette ist leer. Nimm neue Lösung auf.'; } }
+  if (pip.vol <= 1e-9){ pip.vol = 0; S.fast = false; pip.fill = 0; updateLabels(); if (S.running){ stopRun(); S.msg = 'Die Pipette ist leer. Nimm neue Lösung auf.'; } }
   updateUI();
   return true;
 }
@@ -1174,7 +1175,11 @@ function updateLabels(){
     `Die Anzahlen sind stark vereinfacht – in Wirklichkeit steigt die Teilchenzahl von Stufe zu Stufe auf das Zehnfache. ` +
     (S.realDrops
       ? `Die Ionen treten in dem Moment in die Lupe ein, in dem links der Tropfen auf die Lösung trifft. Ein echter Tropfen enthält nur wenig Stoff: Im Modell bringt etwa jeder ${Math.max(1, Math.round(S.cV * S.vV / (S.cT * DROP_REAL * n0())))}. Tropfen ein Ionenpaar mit. `
-      : `Jeder Tropfen bringt ${PAIRS_PER_DROP} Ionenpaare (${F[names().tIon]} und ${F[names().tCo]}) mit – sie treten in dem Moment in die Lupe ein, in dem links der Tropfen auf die Lösung trifft. Damit das Modell stimmt, ist ein Tropfen hier ${fmtV(dropML())} mL groß (ein echter Tropfen hat nur ca. 0,05 mL). `) +
+      : `Ein Tropfen ist hier immer halb so groß wie die aufgenommene Menge, also ${fmtV(dropML())} mL (ein echter Tropfen hat nur ca. 0,05 mL). ` +
+        (pairsPerDrop() >= 0.75
+          ? `Er bringt im Modell im Mittel etwa ${fmt(pairsPerDrop(), Math.abs(pairsPerDrop() - Math.round(pairsPerDrop())) > 0.05 ? 1 : 0)} Ionenpaare (${F[names().tIon]} und ${F[names().tCo]}) mit. `
+          : `Weil ein Tropfen nur wenig Stoff enthält, bringt im Modell nur etwa jeder ${Math.round(1 / pairsPerDrop())}. Tropfen ein Ionenpaar (${F[names().tIon]} und ${F[names().tCo]}) mit. `) +
+        `Die Ionen treten in dem Moment in die Lupe ein, in dem links der Tropfen auf die Lösung trifft. `) +
     `Nach dem Äquivalenzpunkt kommen höchstens ${EXTRA_PAIRS} überschüssige Ionenpaare hinzu, damit das Bild übersichtlich bleibt. ` +
     `Mit jedem Tropfen kommen auch Wassermoleküle des Lösungsmittels hinzu (blass dargestellt); dafür verlassen andere den Ausschnitt. Das Lösungsmittel ist nur angedeutet – in Wirklichkeit gibt es viel mehr Wassermoleküle. Gelb leuchtende Wassermoleküle sind gerade durch Neutralisation entstanden.`;
   updateScale();
@@ -1289,7 +1294,7 @@ $('chkMeter').onchange = e => {
 $('chkChart').onchange = e => { S.chart = e.target.checked; curveDirty = true; };
 $('btnTake').onclick = takeUp;
 $('btnBack').onclick = giveBack;
-$('selPip').onchange = e => { S.pipSel = +e.target.value; };
+$('selPip').onchange = e => { S.pipSel = +e.target.value; updateLabels(); };
 $('selSrc').onchange = e => { S.src = e.target.value; };
 $('btnDrop').onclick = () => { S.msg = ''; spawnDrop(); };
 $('btnML').onclick = releaseAll;
