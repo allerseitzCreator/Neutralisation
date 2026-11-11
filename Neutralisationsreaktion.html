@@ -320,7 +320,7 @@ canvas{width:100%;height:auto;display:block;border-radius:8px}
     </div>
     <h2 style="margin-top:16px">Reaktionsgleichungen</h2>
     <div class="lbl-small">Stoffgleichung</div><div class="eq" id="eqStoff"></div>
-    <div class="lbl-small">Ionenschreibweise (grau: Zuschauer-Ionen)</div><div class="eq" id="eqIon"></div>
+    <div class="lbl-small">Ionenschreibweise (grau: Ionen, die nicht an der Reaktion teilnehmen)</div><div class="eq" id="eqIon"></div>
     <div class="lbl-small">Kern der Neutralisation</div><div class="eq" id="eqCore"></div>
   </section>
 </div>
@@ -1031,7 +1031,29 @@ function addVolume(v, src){
 }
 function setMsg(m){ S.msg = m; updateUI(); }
 function stopRun(){ S.running = false; $('btnRun').classList.remove('on'); $('btnRun').textContent = '▶ Tropfenweise abgeben'; }
+/* Übernimmt alle Einstellungen so, wie sie in der Bedienleiste angezeigt werden
+   (wichtig nach „Zurücksetzen“ und wenn der Browser beim Neuladen Formularwerte wiederherstellt) */
+function readControls(){
+  S.vorlage   = $('selVorlage').value;
+  S.cV        = +$('selCV').value;
+  S.vV        = +$('rngVV').value;  $('outVV').textContent = S.vV + ' mL';
+  S.cT        = +$('selCT').value;
+  S.indicator = $('selInd').value;
+  S.meter     = $('chkMeter').checked;
+  $('chkChart').disabled = !S.meter;
+  if (!S.meter) $('chkChart').checked = false;
+  S.chart     = S.meter && $('chkChart').checked;
+  S.src       = $('selSrc').value;
+  S.pipSel    = +$('selPip').value;
+  S.speed     = +$('rngSpeed').value * 0.25; $('outSpeed').textContent = 'alle ' + fmt(1 / S.speed, 1) + ' s';
+  S.showWater = $('chkWater').checked;
+  S.realDrops = $('chkReal').checked;
+  const hide = $('chkHide').checked;
+  $('particlePanel').style.display = hide ? 'none' : '';
+  $('levels').classList.toggle('single', hide);
+}
 function reset(){
+  readControls();
   stopRun();
   S.vTit = 0; S.vCnt = 0; S.pendT = 0; S.pendC = 0; S.dropAcc = 0; S.msg = '';
   S.resVolT = RES_START; S.resVolC = RES_START; S.pipAt = 'res';
@@ -1191,7 +1213,7 @@ function infoText(){
     case 'before': {
       let t = `Die Lösung ist noch ${charV}: Es liegen mehr ${vIonName} als ${tIonName} vor. ` +
               `Jedes zugetropfte ${tIonSing} (${tIonF}) reagiert mit einem ${vIonSing} zu zwei Wassermolekülen. ` +
-              `Die ${acid ? 'Natrium-Ionen' : 'Chlorid-Ionen'} (${tCoF}) nehmen nicht an der Reaktion teil (Zuschauer-Ionen).`;
+              `Die ${acid ? 'Natrium-Ionen' : 'Chlorid-Ionen'} (${tCoF}) nehmen nicht an der Reaktion teil.`;
       if (C.ratio > 0.9) t += ` <b>Der Äquivalenzpunkt ist nah – jetzt nur noch tropfenweise zugeben!</b>`;
       return t;
     }
@@ -1226,7 +1248,7 @@ function updateUI(){
 
   let html = infoText();
   let obs = [];
-  if (S.indicator !== 'none') obs.push(`${INDICATORS[S.indicator].name} färbt die Lösung <b>${colorName(S.indicator, C.pH)}</b>.`);
+  if (S.indicator !== 'none') obs.push(`Mit ${INDICATORS[S.indicator].name} ist die Lösung <b>${colorName(S.indicator, C.pH)}</b>.`);
   if (S.meter) obs.push(`Das pH-Meter zeigt <b>pH ${fmt(C.pH)}</b>.`);
   if (!obs.length) obs.push('Ohne Indikator und pH-Meter sieht man der Lösung die Neutralisation nicht an – wähle einen Indikator oder schalte das pH-Meter ein.');
   html += `<div class="obs"><b>Beobachtung:</b> ${obs.join(' ')}</div>`;
